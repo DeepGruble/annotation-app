@@ -1,8 +1,8 @@
 
 ### User Tasks
 
-- **Teeth Numbering**
-- **Tooth Anomaly Annotation** _(Specify classes to be annotated)_
+- **Teeth Numbering [Peter: Tooth Tagging/Numbering]**
+- **Tooth Anomaly Annotation [Peter: Tooth Anomaly Annotation]** _(Specify classes to be annotated)_
 
 ## App Overview
 
@@ -12,7 +12,7 @@ The main dashboard should provide an overview of the annotation progress for eac
 
 - **Progress Visualization:**
   - Display the distribution of annotated images by image type and annotation task.
-  - Show the number of remaining images for each task.
+  - Show the number of remaining images for each task. [Peter: Number/%]
   
 - **Task Actions:**
   - Provide _Start Annotation_ buttons for both tasks.
@@ -23,7 +23,7 @@ The main dashboard should provide an overview of the annotation progress for eac
 #### (A) Tooth Numbering Annotation
 
 - **User Interface:**
-  - Users select teeth numbers from a color-coded menu.
+  - Users select teeth numbers from a color-coded menu. 
   - Users can choose different image types from the settings page.
   - A progress bar should indicate annotation completion status.
   - Users can exit annotation and return to the main dashboard.
