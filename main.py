@@ -104,15 +104,7 @@ st.markdown(
         width: 100%;
         
     }
-    .tooth-buttons .stButton>button {
-        background-color:rgb(0, 0, 0) !important;
-        color: black;
-        border-radius: 5px;
-        padding: 5px 10px;
-        margin: 5px;
-        border: 1px solid #ADBDFF;
-    }
-    </style>
+    
     """,
     unsafe_allow_html=True,
 )
@@ -128,25 +120,36 @@ with st.sidebar:
     
     #  Create a grid of buttons for tooth selection
     st.markdown("### Tooth Selection")
+    st.markdown("Select the tooth number to annotate:")
     
     st.markdown('<div class="tooth-buttons">', unsafe_allow_html=True)
     
     st.markdown("""
-        <style>.element-container:has(#button-after) + div button {
+        <style>
+        
+        .element-container:has(#button-after) + div button {
             background-color: transparent;
-            font-size: 8px !important;
+            font-size: 0.5em !important;
             color: white;
-            border: 1px solid ##34E5FF;
+            border: 1px solid #adbdff;
             height: 10px;
             width: 30px;
             0px;
             border-radius: 3px;
             padding: 2px;
             cursor: pointer;
-            
-            
-            
-        }</style>""", 
+        }
+        .element-container:has(#button-after) + div button:hover {
+            border: 1px solid #3185FC;
+        }
+        .element-container:has(#button-after) + div button:active {
+            background-color: #3185FC;
+        }
+        .element-container:has(#button-after) + div button:focus {
+            background-color: #3185FC;
+        }
+        
+        </style>""", 
         unsafe_allow_html=True)
     
     cols = st.columns(16)
@@ -166,7 +169,7 @@ with st.sidebar:
     
 
 # Main content
-st.title("Numbering Tool")
+st.title("Numbering Annotation Tool")
 
 # Display current image and progress
 current_image = get_current_image()
