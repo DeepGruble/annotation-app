@@ -1,48 +1,46 @@
-/* Main style button */
-.stButton>button {
-    background-color: #ADBDFF;
-    color: white;
+.stButton>button {{
+    background-color: {secondary};
+    border: 1px solid {secondary};
+    color: {text};
     border-radius: 5px;
     padding: 10px 20px;
     font-size: 10px;
-    border: 1px solid #ADBDFF;
-}
-.stButton>button:hover {
-    background-color: #3185fc;
-    border: 1px solid #3185fc;
-    color: white;
-}
-.stButton>button:active {
-    background-color: #3185fc;
-    border: 1px solid #3185fc;
-    color: white;
-}
-
-/* Tooth selection buttons */
-.tooth-buttons {
+}}
+.stButton>button:hover {{
+    background-color: {accent};
+    border: 1px solid {accent};
+    color: {text};
+}}
+.stButton>button:active {{
+    background-color: {accent};
+    border: 1px solid {accent};
+    color: {text};
+}}
+.tooth-buttons {{
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-}
-
-.element-container:has(#button-after) + div button {
+}}
+.element-container:has(#button-after) + div button {{
     background-color: transparent;
     font-size: 0.5em !important;
-    color: white;
-    border: 1px solid #adbdff;
-    height: 10px;
-    width: 30px;
-    border-radius: 3px;
+    color: {text};
+    border: 1px solid {secondary};
+    height: 5px;
+    width: 25px;
+    border-radius: 5px;
     padding: 2px;
     cursor: pointer;
-}
-.element-container:has(#button-after) + div button:hover {
-    border: 1px solid #3185FC;
-}
-.element-container:has(#button-after) + div button:active {
-    background-color: #3185FC;
-}
-.element-container:has(#button-after) + div button:focus {
-    background-color: #3185FC;
-}
+}}
+.element-container:has(#button-after) + div button:hover {{
+    border: 2px solid {accent};
+}}
+.element-container:has(#button-after) + div button:active {{
+    background-color: {accent};
+}}
+.element-container:has(#button-after) + div button:focus {{
+    background-color: {accent}; 
+}}
+.stSlider > div[data-baseweb="slider"] {{
+}}

@@ -4,7 +4,8 @@ import os
 import matplotlib.pyplot as plt
 import streamlit as st
 from PIL import Image
-
+from colormaps import *
+from streamlit_theme import st_theme
 
 
 class ImgeType(Enum):
@@ -18,46 +19,40 @@ class ImgeType(Enum):
 # TODO: This value depends on the page entered by the user
 IMAGE_TYPE = ImgeType.COLOR_PANORAMIC
 
+# Has to be set as the first streamlit command
 st.set_page_config(layout="wide", page_title=f"Numbering Tool - {IMAGE_TYPE.value}")
+
+# Detect whicj theme is being used
+theme = st_theme()["base"]
+print(f"Current theme: {theme}")
+if theme == "light":
+    theme_colors = colormap_light
+else:
+    theme_colors = colormap_dark
 
 # Read the css style template
 css_path = os.path.join(os.path.dirname(__file__), "style_template.css")
 if os.path.exists(css_path):
     with open(css_path, "r") as f:
         css_template = f.read()
-    css = css_template
+    css = css_template.format(**theme_colors)
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 else:
     st.warning("CSS template not found. Please check the path.")
 
+DATA_PATH = "temp_images"
 
 
-    
-
-
-
-
-# Color palette for the UI:
-# https://coolors.co/b74f6f-adbdff-3185fc-34e5ff-35281d
-
-# Path to the dataset
-IMAGE_PATH = "C:\\Users\\MajaGojska\\Desktop\\classification_dataset_split\\train"
-# Where the labels are stored
-LABEL_PATH = "C:\\Users\\MajaGojska\\Desktop\\classification_dataset_labels\\train"
-if not os.path.exists(LABEL_PATH):
-    os.makedirs(LABEL_PATH)
-
-
-def read_images(image_type=ImgeType.PANORAMIC):
+def read_images(image_type=None):
     """
     Read images from the specified directory.
     :param image_type: The type of images to read
     """
     images = []
-    image_files = os.listdir(os.path.join(IMAGE_PATH, image_type.value))
-    for image_file in image_files:
+    image_paths = os.path.join(DATA_PATH, image_type.value) if image_type else DATA_PATH
+    for image_file in os.listdir(image_paths):
         images.append(
-            Image.open(os.path.join(IMAGE_PATH, image_type.value, image_file)).convert("RGB")
+            Image.open(os.path.join(image_paths, image_file)).convert("RGB")
         )
     return images
 
