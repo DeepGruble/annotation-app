@@ -1,0 +1,48 @@
+/* Main style button */
+.stButton>button {
+    background-color: #ADBDFF;
+    color: white;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 10px;
+    border: 1px solid #ADBDFF;
+}
+.stButton>button:hover {
+    background-color: #3185fc;
+    border: 1px solid #3185fc;
+    color: white;
+}
+.stButton>button:active {
+    background-color: #3185fc;
+    border: 1px solid #3185fc;
+    color: white;
+}
+
+/* Tooth selection buttons */
+.tooth-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.element-container:has(#button-after) + div button {
+    background-color: transparent;
+    font-size: 0.5em !important;
+    color: white;
+    border: 1px solid #adbdff;
+    height: 10px;
+    width: 30px;
+    border-radius: 3px;
+    padding: 2px;
+    cursor: pointer;
+}
+.element-container:has(#button-after) + div button:hover {
+    border: 1px solid #3185FC;
+}
+.element-container:has(#button-after) + div button:active {
+    background-color: #3185FC;
+}
+.element-container:has(#button-after) + div button:focus {
+    background-color: #3185FC;
+}
