@@ -6,6 +6,7 @@ from SAM2_model import load_sam2
 from SAM2_model import ModelSize
 from segmentation_utils import *
 
+
 class ImgeType(Enum):
     BITEWING = "bitewing"
     COLOR_PANORAMIC = "color_panoramic"
