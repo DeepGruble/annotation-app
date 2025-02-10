@@ -40,7 +40,11 @@ if os.path.exists(css_path):
 else:
     st.warning("CSS template not found. Please check the path.")
 
+
 DATA_PATH = "temp_images"
+SAVE_PATH = "output"
+if not os.path.exists(SAVE_PATH):
+    os.makedirs(SAVE_PATH)
 
 
 def read_images(image_type=None):
