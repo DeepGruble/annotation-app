@@ -1,3 +1,8 @@
+App is deployd via Streamlit cloud ([Link](https://annotation-app-qn7tayj2q3oyon9kkbnfry.streamlit.app/)).
+
+
+Whenever the changes in the code are pushed to the main branch, the app is automatically updated.
+
 
 ### User Tasks
 

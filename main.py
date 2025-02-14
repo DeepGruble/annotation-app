@@ -1,11 +1,16 @@
 from streamlit_drawable_canvas import st_canvas
 from enum import Enum
 import os
-import matplotlib.pyplot as plt
 import streamlit as st
 from PIL import Image
 from colormaps import *
 from streamlit_theme import st_theme
+import pandas as pd
+from st_aggrid import GridOptionsBuilder, AgGrid, JsCode
+from st_aggrid.shared import ColumnsAutoSizeMode
+
+from io import BytesIO
+import base64
 
 
 class ImgeType(Enum):
@@ -14,6 +19,17 @@ class ImgeType(Enum):
     COLOR_ZOOM = "color_zoom"
     PANORAMIC = "panoramic"
     PERIAPICAL = "periapical"
+    
+    
+def pil_image_to_data_url(img):
+    """
+    Convert a PIL image to a data URL.
+    """
+
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    return f"data:image/png;base64,{img_str}"
     
     
 # TODO: This value depends on the page entered by the user
@@ -66,9 +82,10 @@ if "images" not in st.session_state:
     # Read the images from the dataset
     st.session_state.images = read_images()
     st.session_state.current_image_index = 0
-    st.session_state.labels = []
+    st.session_state.annotation_df = pd.DataFrame(columns=["tooth_number", "left", "top", "width", "height", "cropped_image"])
     st.session_state.tooth_number = 1  # Default tooth number
-    
+    st.session_state.processed_object_count = 0
+        
 
 def get_current_image():
     """
@@ -108,13 +125,20 @@ with st.sidebar:
             if st.button(f"{tooth}", key=f"button{tooth}"):
                 st.session_state.tooth_number = tooth
                 print(f"Tooth {tooth} selected")
-                st.rerun()        
+                # st.rerun()        
     st.markdown('</div>', unsafe_allow_html=True)  # Close the div wrapper
+    
+    st.divider()
+    
+    column_1, column_2 = st.columns(2)
+    with column_1:
+        if st.button("Submit", type="primary"):
+            pass
 
+    with column_2:
+        if st.button("Skip", type="primary"):
+            pass  # Add saving logic here
 
-
-# Main content
-#st.title("Numbering Annotation Tool")
 
 # Display current image and progress
 current_image = get_current_image()
@@ -124,8 +148,8 @@ if current_image is not None:
     
     TARGET_IMAGE_SIZE = 500
         
-    current_image.thumbnail((TARGET_IMAGE_SIZE, TARGET_IMAGE_SIZE), Image.LANCZOS)
-    print(f"Image size: {current_image.size}")
+    resized_image = current_image.resize((TARGET_IMAGE_SIZE, TARGET_IMAGE_SIZE), Image.LANCZOS)
+    print(f"Image size: {resized_image.size}")
 
     # Display the canvas with the overlayed image
     canvas_result = st_canvas(
@@ -140,40 +164,75 @@ if current_image is not None:
         drawing_mode="rect",
         key="canvas",
     )
-    
-    column_1, column_2 = st.columns(2)
-    with column_1:
-        if st.button("Submit", type="primary"):
-            pass
-
-    with column_2:
-        if st.button("Skip", type="primary"):
-            pass  # Add saving logic here
             
-        
-
     # Handle canvas result
     if canvas_result and canvas_result.json_data is not None:
         objects = canvas_result.json_data["objects"]
-        if objects:
-            last_object = objects[-1]
+        new_objects = objects[st.session_state.processed_object_count:]
+        
+        for obj in new_objects:
             
-            height = last_object["height"]
-            width = last_object["width"]
+            height, width = obj["height"], obj["width"]
+            left, top = obj["left"], obj["top"]
             
-            left = last_object["left"]
-            top = last_object["top"]
             
-            label = {
+            cropped_image = resized_image.crop((left, top, left + width, top + height))
+            data_url = pil_image_to_data_url(cropped_image)
+            
+            row = {
                 "tooth_number": st.session_state.tooth_number,
                 "left": left,
                 "top": top,
                 "width": width,
                 "height": height,
+                "cropped_image": data_url,
             }
-            print(label)
-            if label not in st.session_state.labels:
-               st.session_state.labels.append(label)
-                
+            # Add the row to the dataframe st.session_state.annotation_df
+            st.session_state.annotation_df.loc[len(st.session_state.annotation_df)] = row
+               
+        st.session_state.processed_object_count = len(objects)
+        
+    st.divider()
+    st.markdown("### Tooth Annotations")
+    
+    if not st.session_state.annotation_df.empty:
+    
+        print(st.session_state.annotation_df)
+        
+        # Create the cellRenderer for the image column
+        render_image = JsCode('''
+            function renderImage(params) {
+                // Create a new image element
+                var img = new Image();
+
+                // Set the src property to the value of the cell (should be a URL pointing to an image)
+                img.src = params.value;
+
+                // Set the width and height of the image to 50 pixels
+                img.width = 50;
+                img.height = 50;
+
+                // Return the image element
+                return img;
+            }
+        '''
+        )
+        options_builder = GridOptionsBuilder.from_dataframe(st.session_state.annotation_df)
+        options_builder.configure_column("cropped_image", cellRenderer=render_image)
+        grid_options = options_builder.build()
+        
+        grid_options = AgGrid(
+            st.session_state.annotation_df,
+            allow_unsafe_jscode=True,
+            gridOptions=grid_options,
+            theme="streamlit",
+            height=200, width=500
+        )
+
+ 
 else:
     st.warning("No images to display. Please check the image directory.")
+    
+
+        
+        
