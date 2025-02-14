@@ -41,7 +41,8 @@ else:
     st.warning("CSS template not found. Please check the path.")
 
 
-DATA_PATH = "temp_images"
+base_dir = os.path.dirname(os.path.abspath(__file__))
+DATA_PATH = os.path.join(base_dir, "temp_images")
 SAVE_PATH = "output"
 if not os.path.exists(SAVE_PATH):
     os.makedirs(SAVE_PATH)
@@ -77,12 +78,7 @@ def get_current_image():
         return st.session_state.images[st.session_state.current_image_index]
     else:
         return None
-    
-def rgb_to_hex(rgb):
-    """
-    Convert an RGB tuple to a hex color string.
-    """
-    return '#%02x%02x%02x' % (int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
+
 
 
 # ===============================================================
@@ -95,12 +91,8 @@ with st.sidebar:
     st.markdown("### Progress")
     st.progress((st.session_state.current_image_index + 1) / len(st.session_state.images))
     st.write(f"Image {st.session_state.current_image_index + 1} of {len(st.session_state.images)}")
-
-    # Tooth selection
-    # Tooth numbers and their corresponding colors
-    tooth_colormap = plt.get_cmap("hsv", 32)
-    # Dictionary mapping tooth numbers to colors
-    tooth_colors_dict = {i + 1: tooth_colormap(i / 32)[:3] for i in range(32)}
+    
+    st.divider()
     
     #  Create a grid of buttons for tooth selection
     st.markdown("### Tooth Selection")
@@ -111,7 +103,6 @@ with st.sidebar:
     cols = st.columns(16)
     for i, tooth in enumerate(list(range(1, 33))):
         with cols[i % 16]:
-            color = tooth_colors_dict[tooth]
             st.markdown('<span id="button-after"></span>', unsafe_allow_html=True)
  
             if st.button(f"{tooth}", key=f"button{tooth}"):
@@ -119,9 +110,6 @@ with st.sidebar:
                 print(f"Tooth {tooth} selected")
                 st.rerun()        
     st.markdown('</div>', unsafe_allow_html=True)  # Close the div wrapper
-    
-    # Add the zoom slider
-    zoom = st.slider("Zoom", min_value=1., max_value=8., value=1., step=0.1)
 
 
 
@@ -132,10 +120,12 @@ with st.sidebar:
 current_image = get_current_image()
 if current_image is not None:
 
+    SCALE = 2.5
+    
+    TARGET_IMAGE_SIZE = 500
         
-    width = int(current_image.width * zoom)
-    height = int(current_image.height * zoom)
-    print(width, height)
+    current_image.thumbnail((TARGET_IMAGE_SIZE, TARGET_IMAGE_SIZE), Image.LANCZOS)
+    print(f"Image size: {current_image.size}")
 
     # Display the canvas with the overlayed image
     canvas_result = st_canvas(
@@ -143,10 +133,10 @@ if current_image is not None:
         stroke_width=2,
         background_color="#FFFFFF",
         update_streamlit=True,
-        stroke_color=rgb_to_hex(tooth_colors_dict[st.session_state.tooth_number]),
+        stroke_color=theme_colors["primary"],
         background_image=current_image,
-        width=width * 2,
-        height=height * 2,
+        width=TARGET_IMAGE_SIZE,
+        height=TARGET_IMAGE_SIZE,
         drawing_mode="rect",
         key="canvas",
     )
