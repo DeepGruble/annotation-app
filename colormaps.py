@@ -16,3 +16,10 @@ colormap_dark = {
 
 # Alternative Color palette for the UI:
 # https://coolors.co/b74f6f-adbdff-3185fc-34e5ff-35281d
+
+"""
+[theme]
+base="light"
+primaryColor="#763ecc"
+"""
+

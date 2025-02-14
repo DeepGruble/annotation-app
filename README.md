@@ -55,3 +55,13 @@ The main dashboard should provide an overview of the annotation progress for eac
   - Users can exit the process and return to the dashboard if not all images in a case are annotated.
   - If all images in a case are annotated, users proceed to the next case.
 
+----------------------------------------
+
+# Tasks TODO:
+
+1) Save the bounding boxes after user clicks the submit button.
+2) Add functionality to delete the bounding boxes (both from canvas and from the list of bounding boxes).
+3) (*) Add functionality to edit the bounding boxes.
+4) Add functionality to skip the image.
+5) Zoom in/out functionality.
+6) Automatic app deployment using streamlit website (https://share.streamlit.io/new)
