@@ -1,0 +1,5 @@
+streamlit_drawable_canvas==0.9.3
+matplotlib==3.9.3
+streamlit==1.40.0
+pillow=11.0.0
+st-theme==1.2.3
