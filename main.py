@@ -6,12 +6,9 @@ from PIL import Image
 from colormaps import *
 from streamlit_theme import st_theme
 import pandas as pd
-from st_aggrid import GridOptionsBuilder, AgGrid, JsCode
-from st_aggrid.shared import ColumnsAutoSizeMode
-
 from io import BytesIO
 import base64
-
+import math
 
 
 class ImgeType(Enum):
@@ -21,20 +18,48 @@ class ImgeType(Enum):
     PANORAMIC = "panoramic"
     PERIAPICAL = "periapical"
     
+# TODO: This value depends on the page entered by the user
+IMAGE_TYPE = ImgeType.COLOR_PANORAMIC
+
+
+DANISH_NUMBERING = [
+    # Top row, left to right, left side
+    "8+", "7+", "6+", "5+", "4+", "3+", "2+", "1+",
+    # Top row, left to right, right side
+    "+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8",
+    
+    # Bottom row, left to right, left side
+    "8-", "7-", "6-", "5-", "4-", "3-", "2-", "1-",
+    # Bottom row, left to right, right side
+    "-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8"
+]
+
+INTERNATIONAL_NUMBERING = [
+    # Top row, left to right, left side
+    "18", "17", "16", "15", "14", "13", "12", "11",
+    # Top row, left to right, right side
+    "21", "22", "23", "24", "25", "26", "27", "28",
+    
+    # Bottom row, left to right, left side
+    "48", "47", "46", "45", "44", "43", "42", "41",
+    # Bottom row, left to right, right side
+    "31", "32", "33", "34", "35", "36", "37", "38"
+]
+
+numbering_system = DANISH_NUMBERING
+
+
+    
     
 def pil_image_to_data_url(img):
     """
     Convert a PIL image to a data URL.
     """
-
     buffered = BytesIO()
     img.save(buffered, format="PNG")
     img_str = base64.b64encode(buffered.getvalue()).decode()
     return f"data:image/png;base64,{img_str}"
     
-    
-# TODO: This value depends on the page entered by the user
-IMAGE_TYPE = ImgeType.COLOR_PANORAMIC
 
 # Has to be set as the first streamlit command
 st.set_page_config(layout="wide", page_title=f"Numbering Tool - {IMAGE_TYPE.value}")
@@ -116,17 +141,20 @@ with st.sidebar:
     st.markdown("Select the tooth number to annotate:")
     
     st.markdown('<div class="tooth-buttons">', unsafe_allow_html=True)
+ 
     
     cols = st.columns(16)
     for i, tooth in enumerate(list(range(1, 33))):
         with cols[i % 16]:
             st.markdown('<span id="button-after"></span>', unsafe_allow_html=True)
- 
-            if st.button(f"{tooth}", key=f"button{tooth}"):
+            tooth_name = numbering_system[i]
+            if st.button(f"{tooth_name}", key=f"button{tooth}"):
                 st.session_state.tooth_number = tooth
                 print(f"Tooth {tooth} selected")
-                # st.rerun()        
     st.markdown('</div>', unsafe_allow_html=True)  # Close the div wrapper
+    
+    numbering_system_radio = st.radio("Numbering System", ["Danish", "International"])
+    numbering_system = DANISH_NUMBERING if numbering_system_radio == "Danish" else INTERNATIONAL_NUMBERING
     
     st.divider()
     
@@ -137,14 +165,66 @@ with st.sidebar:
 
     with column_2:
         if st.button("Skip", type="primary"):
-            pass  # Add saving logic here
+            # TODO: Save the annotations
+            
+            # Show the next image
+            st.session_state.current_image_index += 1
+            st.session_state.processed_object_count = 0
+            st.session_state.annotation_df = pd.DataFrame(columns=["tooth_number", "left", "top", "width", "height", "cropped_image"])
+            st.session_state.tooth_number = 1  # Default tooth number
+            st.rerun()
+            
+            
+def build_html_table(dataframe):     
+    # Styling parameters
+    padding = "8px"
+    border_width = "1.5px"
+    header_bg = "#f2f2f2" if theme == "light" else "#272630"
+    header_color = theme_colors["text"]
+    border_color = "#999"
+    
+    # Start HTML string for table   
+    html = f"""     
+    <style>
+        table {{ width: 100%; border-collapse: collapse; }}
+        th, td {{ border: {border_width} solid {border_color}; padding: {padding}; text-align: center; }}
+        th {{ background-color: {header_bg}; color: {header_color}; }}
+    </style>
+    <table>       
+        <tr>
+            <th>Tooth Number</th>         
+            <th>Left</th>         
+            <th>Top</th>         
+            <th>Width</th>         
+            <th>Height</th>         
+            <th>Tooth Image</th>       
+        </tr>"""
+    
+    for _, row in dataframe.iterrows():         
+        tooth_number = numbering_system[row["tooth_number"] - 1]     
+        left, top = row["left"], row["top"]         
+        width, height = row["width"], row["height"]         
+        cropped = row["cropped_image"]
+
+        html += f"""         
+        <tr>          
+            <td>{tooth_number}</td>           
+            <td>{left}</td>           
+            <td>{top}</td> 
+            <td>{width}</td> 
+            <td>{height}</td> 
+            <td> 
+                <img src="{cropped}" alt="Cropped" style="height: 50px; width: auto;"/>
+            </td>
+        </tr> """
+    
+    html += "</table>"
+    return html
 
 
 # Display current image and progress
 current_image = get_current_image()
 if current_image is not None:
-
-    SCALE = 2.5
     
     TARGET_IMAGE_SIZE = 500
         
@@ -181,10 +261,8 @@ if current_image is not None:
             
             row = {
                 "tooth_number": st.session_state.tooth_number,
-                "left": left,
-                "top": top,
-                "width": width,
-                "height": height,
+                "left": left, "top": top,
+                "width": width, "height": height,
                 "cropped_image": data_url,
             }
             # Add the row to the dataframe st.session_state.annotation_df
@@ -192,47 +270,36 @@ if current_image is not None:
                
         st.session_state.processed_object_count = len(objects)
         
-    st.divider()
-    st.markdown("### Tooth Annotations")
-    
-    if not st.session_state.annotation_df.empty:
-    
+        st.divider()
+        
         print(st.session_state.annotation_df)
-        
-        # Create the cellRenderer for the image column
-        render_image = JsCode('''
-            function renderImage(params) {
-                // Create a new image element
-                var img = new Image();
+        # TODO update the table with the new annotations
 
-                // Set the src property to the value of the cell (should be a URL pointing to an image)
-                img.src = params.value;
-
-                // Set the width and height of the image to 50 pixels
-                img.width = 50;
-                img.height = 50;
-
-                // Return the image element
-                return img;
-            }
-        '''
-        )
-        options_builder = GridOptionsBuilder.from_dataframe(st.session_state.annotation_df)
-        options_builder.configure_column("cropped_image", cellRenderer=render_image)
-        grid_options = options_builder.build()
-        
-        grid_options = AgGrid(
-            st.session_state.annotation_df,
-            allow_unsafe_jscode=True,
-            gridOptions=grid_options,
-            theme="streamlit",
-            height=200, width=500
-        )
+        if st.session_state.annotation_df.empty: 
+            st.write("No annotations yet.") 
+        else: 
+            table_html = build_html_table(st.session_state.annotation_df) 
+            # Display the table with unsafe_allow_html=True 
+            st.markdown(table_html, unsafe_allow_html=True)
 
  
 else:
     st.warning("No images to display. Please check the image directory.")
     
+    
+# Zoom in
+# click and build a bounding box around the tooth
+# create the presentation
+    
 
         
         
+        # bullet points
+        # process diagram
+        # write to felix
+        # weak labelling for object detetion (?)
+        
+        
+        
+
+    
