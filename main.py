@@ -13,6 +13,7 @@ from io import BytesIO
 import base64
 
 
+
 class ImgeType(Enum):
     BITEWING = "bitewing"
     COLOR_PANORAMIC = "color_panoramic"
@@ -39,12 +40,11 @@ IMAGE_TYPE = ImgeType.COLOR_PANORAMIC
 st.set_page_config(layout="wide", page_title=f"Numbering Tool - {IMAGE_TYPE.value}")
 
 # Detect whicj theme is being used
-theme = st_theme()["base"]
-print(f"Current theme: {theme}")
-if theme == "light":
+try:
+    theme = st_theme()["base"]
+    theme_colors = colormap_light if theme == "light" else colormap_dark
+except:
     theme_colors = colormap_light
-else:
-    theme_colors = colormap_dark
 
 # Read the css style template
 css_path = os.path.join(os.path.dirname(__file__), "style_template.css")
@@ -85,7 +85,7 @@ if "images" not in st.session_state:
     st.session_state.annotation_df = pd.DataFrame(columns=["tooth_number", "left", "top", "width", "height", "cropped_image"])
     st.session_state.tooth_number = 1  # Default tooth number
     st.session_state.processed_object_count = 0
-        
+            
 
 def get_current_image():
     """

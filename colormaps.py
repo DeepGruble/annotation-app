@@ -28,13 +28,13 @@ def rgb_to_hex(rgb):
 
 def hex_to_rgb(hex):
     """
-    Convert a hex color string to an RGB tuple.
+    Convert a hex color string to an RGB tuple (0-255 range).
     """
-    return tuple(int(hex[i:i+2], 16) / 255 for i in (1, 3, 5))
+    return tuple(int(hex[i:i+2], 16) for i in (1, 3, 5))
 
 
 def blend_hex_colors(hex1, hex2, ratio=0.5):
-    # Convert hex to RGB
+    # Convert hex to RGB (0-255 range)
     rgb1 = hex_to_rgb(hex1)
     rgb2 = hex_to_rgb(hex2)
 
