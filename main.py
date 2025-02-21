@@ -1,5 +1,4 @@
 from streamlit_drawable_canvas import st_canvas
-from enum import Enum
 import os
 import streamlit as st
 from PIL import Image
@@ -8,70 +7,47 @@ from streamlit_theme import st_theme
 import pandas as pd
 from io import BytesIO
 import base64
-import math
-
-
-class ImgeType(Enum):
-    BITEWING = "bitewing"
-    COLOR_PANORAMIC = "color_panoramic"
-    COLOR_ZOOM = "color_zoom"
-    PANORAMIC = "panoramic"
-    PERIAPICAL = "periapical"
-    
-# TODO: This value depends on the page entered by the user
-IMAGE_TYPE = ImgeType.COLOR_PANORAMIC
-
-
-DANISH_NUMBERING = [
-    # Top row, left to right, left side
-    "8+", "7+", "6+", "5+", "4+", "3+", "2+", "1+",
-    # Top row, left to right, right side
-    "+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8",
-    
-    # Bottom row, left to right, left side
-    "8-", "7-", "6-", "5-", "4-", "3-", "2-", "1-",
-    # Bottom row, left to right, right side
-    "-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8"
-]
-
-INTERNATIONAL_NUMBERING = [
-    # Top row, left to right, left side
-    "18", "17", "16", "15", "14", "13", "12", "11",
-    # Top row, left to right, right side
-    "21", "22", "23", "24", "25", "26", "27", "28",
-    
-    # Bottom row, left to right, left side
-    "48", "47", "46", "45", "44", "43", "42", "41",
-    # Bottom row, left to right, right side
-    "31", "32", "33", "34", "35", "36", "37", "38"
-]
-
-numbering_system = DANISH_NUMBERING
-
-
+from teeth_utils import *
     
     
 def pil_image_to_data_url(img):
     """
     Convert a PIL image to a data URL.
+    :param img: The PIL image to convert
+    :return: The data URL string
     """
     buffered = BytesIO()
     img.save(buffered, format="PNG")
     img_str = base64.b64encode(buffered.getvalue()).decode()
     return f"data:image/png;base64,{img_str}"
+
+
+def read_images(image_type=None):
+    """
+    Read images from the specified directory.
+    :param image_type: The type of images to read
+    :return: A list of PIL images
+    """
+    images = []
+    image_paths = os.path.join(DATA_PATH, image_type.value) if image_type else DATA_PATH
+    for image_file in os.listdir(image_paths):
+        images.append(
+            Image.open(os.path.join(image_paths, image_file)).convert("RGB")
+        )
+    return images
     
 
 # Has to be set as the first streamlit command
 st.set_page_config(layout="wide", page_title=f"Numbering Tool - {IMAGE_TYPE.value}")
 
-# Detect whicj theme is being used
+# Detect which theme is being used
 try:
     theme = st_theme()["base"]
     theme_colors = colormap_light if theme == "light" else colormap_dark
 except:
     theme_colors = colormap_light
 
-# Read the css style template
+# Read the css style template and set the theme colors
 css_path = os.path.join(os.path.dirname(__file__), "style_template.css")
 if os.path.exists(css_path):
     with open(css_path, "r") as f:
@@ -87,20 +63,6 @@ DATA_PATH = os.path.join(base_dir, "temp_images")
 SAVE_PATH = "output"
 if not os.path.exists(SAVE_PATH):
     os.makedirs(SAVE_PATH)
-
-
-def read_images(image_type=None):
-    """
-    Read images from the specified directory.
-    :param image_type: The type of images to read
-    """
-    images = []
-    image_paths = os.path.join(DATA_PATH, image_type.value) if image_type else DATA_PATH
-    for image_file in os.listdir(image_paths):
-        images.append(
-            Image.open(os.path.join(image_paths, image_file)).convert("RGB")
-        )
-    return images
 
 # Initialize the session state
 if "images" not in st.session_state:
@@ -120,8 +82,6 @@ def get_current_image():
         return st.session_state.images[st.session_state.current_image_index]
     else:
         return None
-
-
 
 # ===============================================================
 # Streamlit UI
@@ -147,25 +107,29 @@ with st.sidebar:
     for i, tooth in enumerate(list(range(1, 33))):
         with cols[i % 16]:
             st.markdown('<span id="button-after"></span>', unsafe_allow_html=True)
-            tooth_name = numbering_system[i]
+            tooth_name = NUMBERING_SYSTEM[i]
             if st.button(f"{tooth_name}", key=f"button{tooth}"):
                 st.session_state.tooth_number = tooth
                 print(f"Tooth {tooth} selected")
     st.markdown('</div>', unsafe_allow_html=True)  # Close the div wrapper
     
     numbering_system_radio = st.radio("Numbering System", ["Danish", "International"])
-    numbering_system = DANISH_NUMBERING if numbering_system_radio == "Danish" else INTERNATIONAL_NUMBERING
+    NUMBERING_SYSTEM = DANISH_NUMBERING if numbering_system_radio == "Danish" else INTERNATIONAL_NUMBERING
     
     st.divider()
     
     column_1, column_2 = st.columns(2)
     with column_1:
         if st.button("Submit", type="primary"):
-            pass
+            # TODO: Save the annotations
+            # FIXME: Standardize to 0 - 1 range?
+            annotation_df = st.session_state.annotation_df[["tooth_number", "left", "top", "width", "height"]]
+            annotation_df.to_csv("annotations.csv", index=False)
+            st.success("Annotations saved successfully.")
 
     with column_2:
         if st.button("Skip", type="primary"):
-            # TODO: Save the annotations
+            
             
             # Show the next image
             st.session_state.current_image_index += 1
@@ -177,7 +141,7 @@ with st.sidebar:
             
 def build_html_table(dataframe):     
     # Styling parameters
-    padding = "8px"
+    padding = "6px"
     border_width = "1.5px"
     header_bg = "#f2f2f2" if theme == "light" else "#272630"
     header_color = theme_colors["text"]
@@ -192,7 +156,7 @@ def build_html_table(dataframe):
     </style>
     <table>       
         <tr>
-            <th>Tooth Number</th>         
+            <th>Number</th>         
             <th>Left</th>         
             <th>Top</th>         
             <th>Width</th>         
@@ -201,7 +165,7 @@ def build_html_table(dataframe):
         </tr>"""
     
     for _, row in dataframe.iterrows():         
-        tooth_number = numbering_system[row["tooth_number"] - 1]     
+        tooth_number = NUMBERING_SYSTEM[row["tooth_number"] - 1]     
         left, top = row["left"], row["top"]         
         width, height = row["width"], row["height"]         
         cropped = row["cropped_image"]
@@ -227,9 +191,7 @@ current_image = get_current_image()
 if current_image is not None:
     
     TARGET_IMAGE_SIZE = 500
-        
     resized_image = current_image.resize((TARGET_IMAGE_SIZE, TARGET_IMAGE_SIZE), Image.LANCZOS)
-    print(f"Image size: {resized_image.size}")
 
     # Display the canvas with the overlayed image
     canvas_result = st_canvas(
@@ -238,7 +200,7 @@ if current_image is not None:
         background_color="#FFFFFF",
         update_streamlit=True,
         stroke_color=theme_colors["primary"],
-        background_image=current_image,
+        background_image=resized_image,
         width=TARGET_IMAGE_SIZE,
         height=TARGET_IMAGE_SIZE,
         drawing_mode="rect",
@@ -271,9 +233,7 @@ if current_image is not None:
         st.session_state.processed_object_count = len(objects)
         
         st.divider()
-        
-        print(st.session_state.annotation_df)
-        # TODO update the table with the new annotations
+
 
         if st.session_state.annotation_df.empty: 
             st.write("No annotations yet.") 
@@ -289,14 +249,8 @@ else:
     
 # Zoom in
 # click and build a bounding box around the tooth
-# create the presentation
-    
-
-        
-        
-        # bullet points
-        # process diagram
-        # write to felix
+# normalize the coordiantes
+# Move stuff to .css file
         # weak labelling for object detetion (?)
         
         
