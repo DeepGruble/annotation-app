@@ -1,3 +1,6 @@
+import os
+import json
+
 class Annotations:
     
     def __init__(self):
@@ -32,10 +35,14 @@ class Annotations:
         })
     
     def save_annotations(self, save_path):
-        with open(os.path.join(save_path, "annotations.json"), "w") as f:
-            json.dump({
-                "images": self.images,
-                "annotations": self.annotations,
-                "categories": self.categories
-            }, f)
-        st.success("Annotations saved successfully.")
+        try:
+            with open(os.path.join(save_path, "annotations.json"), "w") as f:
+                json.dump({
+                    "images": self.images,
+                    "annotations": self.annotations,
+                    "categories": self.categories
+                }, f, indent=4)  # Add indentation for readability
+            return True
+        except Exception as e:
+            print(f"Error saving annotations: {e}")
+            return False

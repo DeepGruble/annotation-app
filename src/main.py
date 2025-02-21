@@ -2,13 +2,10 @@ from streamlit_drawable_canvas import st_canvas
 import os
 import streamlit as st
 from PIL import Image
-
 from streamlit_theme import st_theme
 import pandas as pd
 from io import BytesIO
 import base64
-import json
-
 from teeth_utils import *
 from colormaps import *
 from annotations import Annotations
@@ -99,6 +96,10 @@ def get_current_image():
 
 def next_image():
     st.session_state.current_image_index += 1
+    if st.session_state.current_image_index >= len(st.session_state.images):
+        # FIXME: This needs to be more sophisticated
+        st.success("All images have been annotated.")
+        st.stop()
     st.session_state.processed_object_count = 0
     st.session_state.annotation_df = pd.DataFrame(columns=[
         "tooth_number", "x_min", "y_min", "width", "height", "cropped_image"])
@@ -152,27 +153,20 @@ with st.sidebar:
             image_id = st.session_state.current_image_index
             
             # Add this image to the coco data
-            st.session_state.coco_data["images"].append({
-                "id": image_id,
-                "file_name": f"image_{st.session_state.current_image_index}.png"    # FIXME
-            })
-            
-            annotation_df = st.session_state.annotation_df[[
-                "tooth_number", "x_min", "y_min", "width", "height"]]
-            for _, row in annotation_df.iterrows():
-                st.session_state.coco_data["annotations"].append({
-                    "id": len(st.session_state.coco_data["annotations"]),           # FIXME
-                    "image_id": image_id,
-                    "category_id": row["tooth_number"],
-                    "bbox": [row["x_min"], row["y_min"], row["width"], row["height"]],
-                    "area": row["width"] * row["height"],
-                    "iscrowd": 0
-                })
+            st.session_state.coco_data.add_image(image_id, f"image_{image_id}.jpg")
+        
+            for idx, row in st.session_state.annotation_df.iterrows():
+                st.session_state.coco_data.add_annotation(
+                    idx, 
+                    image_id, row["tooth_number"], 
+                    [row["x_min"], row["y_min"], 
+                     row["width"], row["height"]])
                 
-            # Save the annotation data
-            with open(os.path.join(SAVE_PATH, "annotations.json"), "w") as f:
-                json.dump(st.session_state.coco_data, f)
-            st.success("Annotations saved successfully.")
+            # Save the annotations
+            if st.session_state.coco_data.save_annotations(SAVE_PATH):
+                st.success("Annotations saved successfully.")
+            else:
+                st.error("Failed to save annotations.")
             
             # Show the next image
             next_image()
@@ -247,9 +241,6 @@ if current_image is not None:
             
             cropped_image = resized_image.crop((x_min, y_min, x_min + width, y_min + height))
             data_url = pil_image_to_data_url(cropped_image)
-            
-            # Standardize the bbox format
-            x_min, y_min, width, height = standardize_bbox(x_min, y_min, width, height)
             
             row = {
                 "tooth_number": st.session_state.tooth_number,
