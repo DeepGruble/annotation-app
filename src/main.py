@@ -2,13 +2,18 @@ from streamlit_drawable_canvas import st_canvas
 import os
 import streamlit as st
 from PIL import Image
-from colormaps import *
+
 from streamlit_theme import st_theme
 import pandas as pd
 from io import BytesIO
 import base64
-from teeth_utils import *
+import json
 
+from teeth_utils import *
+from colormaps import *
+from annotations import Annotations
+
+# Constants
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_PATH = os.path.join(ROOT, "temp_images")
 SAVE_PATH = os.path.join(ROOT, "output")
@@ -17,13 +22,6 @@ if not os.path.exists(SAVE_PATH):
 
 TARGET_IMAGE_SIZE = 500
 
-
-def standardize_bbox(x_min, y_min, width, height):
-    # Standardize the bbox format
-    x_min, y_min = x_min / TARGET_IMAGE_SIZE, y_min / TARGET_IMAGE_SIZE
-    width, height = width / TARGET_IMAGE_SIZE, height / TARGET_IMAGE_SIZE
-    return x_min, y_min, width, height
-    
     
 def pil_image_to_data_url(img):
     """
@@ -88,6 +86,7 @@ if "images" not in st.session_state:
     # Set default tooth number
     st.session_state.tooth_number = 1  
     st.session_state.processed_object_count = 0
+    st.session_state.coco_data = Annotations()
             
 
 def get_current_image():
@@ -147,11 +146,32 @@ with st.sidebar:
     column_1, column_2 = st.columns(2)
     with column_1:
         if st.button("Submit", type="primary"):
-            # TODO: Indicate for which image the annotations are saved
-            # FIXME: Not a csv file
+            
+            # FIXME: Theese have to be unique
+            # This image should be either stored in a database with unique id or this image should be saved now in a dedicated folder
+            image_id = st.session_state.current_image_index
+            
+            # Add this image to the coco data
+            st.session_state.coco_data["images"].append({
+                "id": image_id,
+                "file_name": f"image_{st.session_state.current_image_index}.png"    # FIXME
+            })
+            
             annotation_df = st.session_state.annotation_df[[
                 "tooth_number", "x_min", "y_min", "width", "height"]]
-            annotation_df.to_csv("annotations.csv", index=False)
+            for _, row in annotation_df.iterrows():
+                st.session_state.coco_data["annotations"].append({
+                    "id": len(st.session_state.coco_data["annotations"]),           # FIXME
+                    "image_id": image_id,
+                    "category_id": row["tooth_number"],
+                    "bbox": [row["x_min"], row["y_min"], row["width"], row["height"]],
+                    "area": row["width"] * row["height"],
+                    "iscrowd": 0
+                })
+                
+            # Save the annotation data
+            with open(os.path.join(SAVE_PATH, "annotations.json"), "w") as f:
+                json.dump(st.session_state.coco_data, f)
             st.success("Annotations saved successfully.")
             
             # Show the next image
