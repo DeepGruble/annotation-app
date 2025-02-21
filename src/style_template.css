@@ -5,6 +5,7 @@
     border-radius: 5px;
     padding: 10px 20px;
     font-size: 10px;
+    transition: background-color 0.1s, border-color 0.1s;
 }}
 .stButton>button:hover {{
     background-color: {partial};
@@ -45,5 +46,28 @@
     border: 2px solid {accent};
 }}
 .stSlider > div[data-baseweb="slider"] {{
+
+}}
+[data-testid="stSidebar"][aria-expanded="true"] {{
+    width: 450px;
+    min-width: 450px;
+}}
+[data-testid="stSidebar"][aria-expanded="false"] {{
+    width: 450px;
+    min-width: 450px;
+    margin-left: -450px;
+}}
+table {{
+    border-collapse: collapse;
+    width: 100%;
+}}
+th, td {{
+    border: 1.5px solid "#999";
+    padding: 3px;
+    text-align: left;
+}}
+th {{
+    background-color: {background2};
+    color: {text};
 }}
 

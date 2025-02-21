@@ -1,24 +1,3 @@
-"""
-colormap_light = {
-    "text": "#0a0514",
-    "background": "#f6f3fc",
-    "primary": "#763ecc",
-    "secondary": "#a8e18b",
-    "accent": "#6ed9bb",
-}
-"""
-
-"""
-colormap_dark = {
-    "text": "#f0ebfa",
-    "background": "#06030c",
-    "primary": "#6c33c1",
-    "secondary": "#3b761e",
-    "accent": "#279173",
-}
-"""
-
-    
 def rgb_to_hex(rgb):
     """
     Convert an RGB tuple to a hex color string.
@@ -47,6 +26,7 @@ def blend_hex_colors(hex1, hex2, ratio=0.5):
 colormap_dark = {
     "text": "#f0ebfa",
     "background": "#06030c",
+    "background2": "#272630",
     "primary": "#68EDC6",
     "secondary": "#ADBDFF",
     "accent": "#3185FC",
@@ -56,6 +36,7 @@ colormap_dark["partial"] = blend_hex_colors(colormap_dark["secondary"], colormap
 colormap_light = {
     "text": "#0a0514",
     "background": "#f6f3fc",
+    "background2": "#f2f2f2",
     "primary": "#8AA1FF",
     "secondary": "#BCE784",
     "accent": "#5DD39E",

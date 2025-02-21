@@ -1,15 +1,15 @@
-App is deployd via Streamlit cloud ([Link](https://annotation-app-qn7tayj2q3oyon9kkbnfry.streamlit.app/)).
+## Deployment
 
+App is currently deployed via Streamlit cloud ([Link](https://annotation-app-qn7tayj2q3oyon9kkbnfry.streamlit.app/)). Whenever the changes in the code are pushed to the main branch, the app is automatically updated.
 
-Whenever the changes in the code are pushed to the main branch, the app is automatically updated.
+Additionally, the app will be deployed on Azure App Service ([How?](https://learn.microsoft.com/en-us/answers/questions/1470782/how-to-deploy-a-streamlit-application-on-azure-app))
 
+# App Overview
 
-### User Tasks
-
+User Tasks:
 - **Teeth Numbering [Peter: Tooth Tagging/Numbering]**
 - **Tooth Anomaly Annotation [Peter: Tooth Anomaly Annotation]** _(Specify classes to be annotated)_
 
-## App Overview
 
 ### 1. Dashboard Overview
 
@@ -67,6 +67,6 @@ The main dashboard should provide an overview of the annotation progress for eac
 1) Save the bounding boxes after user clicks the submit button.
 2) Add functionality to delete the bounding boxes (both from canvas and from the list of bounding boxes).
 3) (*) Add functionality to edit the bounding boxes.
-4) Add functionality to skip the image.
+4) ~~Add functionality to skip the image.~~
 5) Zoom in/out functionality.
-6) Automatic app deployment using streamlit website (https://share.streamlit.io/new)
+6) ~~Automatic app deployment using streamlit website (https://share.streamlit.io/new)~~
