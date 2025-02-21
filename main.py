@@ -8,6 +8,15 @@ import pandas as pd
 from io import BytesIO
 import base64
 from teeth_utils import *
+
+
+TARGET_IMAGE_SIZE = 500
+
+def standardize_bbox(x_min, y_min, width, height):
+    # Standardize the bbox format
+    x_min, y_min = x_min / TARGET_IMAGE_SIZE, y_min / TARGET_IMAGE_SIZE
+    width, height = width / TARGET_IMAGE_SIZE, height / TARGET_IMAGE_SIZE
+    return x_min, y_min, width, height
     
     
 def pil_image_to_data_url(img):
@@ -68,9 +77,16 @@ if not os.path.exists(SAVE_PATH):
 if "images" not in st.session_state:
     # Read the images from the dataset
     st.session_state.images = read_images()
+    # Initialize the current image index (index of the current image being displayed)
     st.session_state.current_image_index = 0
-    st.session_state.annotation_df = pd.DataFrame(columns=["tooth_number", "left", "top", "width", "height", "cropped_image"])
-    st.session_state.tooth_number = 1  # Default tooth number
+    # Initialize the annotation dataframe
+    st.session_state.annotation_df = pd.DataFrame(columns=[
+        "tooth_number", 
+        "x_min", "y_min", 
+        "width", "height", 
+        "cropped_image"])
+    # Set default tooth number
+    st.session_state.tooth_number = 1  
     st.session_state.processed_object_count = 0
             
 
@@ -80,8 +96,15 @@ def get_current_image():
     """
     if st.session_state.current_image_index < len(st.session_state.images):
         return st.session_state.images[st.session_state.current_image_index]
-    else:
-        return None
+    return None
+
+def next_image():
+    st.session_state.current_image_index += 1
+    st.session_state.processed_object_count = 0
+    st.session_state.annotation_df = pd.DataFrame(columns=[
+        "tooth_number", "x_min", "y_min", "width", "height", "cropped_image"])
+    st.session_state.tooth_number = 1
+    st.rerun()
 
 # ===============================================================
 # Streamlit UI
@@ -98,11 +121,15 @@ with st.sidebar:
     
     #  Create a grid of buttons for tooth selection
     st.markdown("### Tooth Selection")
+    
+    # Allow the user to select the numbering system
+    numbering_system_radio = st.radio("Numbering System", ["Danish", "International"])
+    NUMBERING_SYSTEM = DANISH_NUMBERING if numbering_system_radio == "Danish" else INTERNATIONAL_NUMBERING
+    
     st.markdown("Select the tooth number to annotate:")
     
+    # Open a div wrapper
     st.markdown('<div class="tooth-buttons">', unsafe_allow_html=True)
- 
-    
     cols = st.columns(16)
     for i, tooth in enumerate(list(range(1, 33))):
         with cols[i % 16]:
@@ -111,10 +138,10 @@ with st.sidebar:
             if st.button(f"{tooth_name}", key=f"button{tooth}"):
                 st.session_state.tooth_number = tooth
                 print(f"Tooth {tooth} selected")
-    st.markdown('</div>', unsafe_allow_html=True)  # Close the div wrapper
+    # Close the div wrapper
+    st.markdown('</div>', unsafe_allow_html=True)  
     
-    numbering_system_radio = st.radio("Numbering System", ["Danish", "International"])
-    NUMBERING_SYSTEM = DANISH_NUMBERING if numbering_system_radio == "Danish" else INTERNATIONAL_NUMBERING
+    # Main buttons
     
     st.divider()
     
@@ -122,61 +149,45 @@ with st.sidebar:
     with column_1:
         if st.button("Submit", type="primary"):
             # TODO: Save the annotations
-            # FIXME: Standardize to 0 - 1 range?
-            annotation_df = st.session_state.annotation_df[["tooth_number", "left", "top", "width", "height"]]
+            # TODO: Indicate for which image the annotations are saved
+            # FIXME: Not a csv file
+            annotation_df = st.session_state.annotation_df[[
+                "tooth_number", "x_min", "y_min", "width", "height"]]
             annotation_df.to_csv("annotations.csv", index=False)
             st.success("Annotations saved successfully.")
+            
+            # Show the next image
+            next_image()
 
     with column_2:
         if st.button("Skip", type="primary"):
-            
-            
             # Show the next image
-            st.session_state.current_image_index += 1
-            st.session_state.processed_object_count = 0
-            st.session_state.annotation_df = pd.DataFrame(columns=["tooth_number", "left", "top", "width", "height", "cropped_image"])
-            st.session_state.tooth_number = 1  # Default tooth number
-            st.rerun()
+            next_image()
             
-            
+
 def build_html_table(dataframe):     
-    # Styling parameters
-    padding = "6px"
-    border_width = "1.5px"
-    header_bg = "#f2f2f2" if theme == "light" else "#272630"
-    header_color = theme_colors["text"]
-    border_color = "#999"
     
     # Start HTML string for table   
     html = f"""     
-    <style>
-        table {{ width: 100%; border-collapse: collapse; }}
-        th, td {{ border: {border_width} solid {border_color}; padding: {padding}; text-align: center; }}
-        th {{ background-color: {header_bg}; color: {header_color}; }}
-    </style>
     <table>       
         <tr>
             <th>Number</th>         
-            <th>Left</th>         
-            <th>Top</th>         
-            <th>Width</th>         
-            <th>Height</th>         
+            <th>Bbox</th>                
             <th>Tooth Image</th>       
         </tr>"""
     
     for _, row in dataframe.iterrows():         
         tooth_number = NUMBERING_SYSTEM[row["tooth_number"] - 1]     
-        left, top = row["left"], row["top"]         
+        x_min, y_min = row["x_min"], row["y_min"]    
         width, height = row["width"], row["height"]         
         cropped = row["cropped_image"]
+        
+        bbxo = f"[{x_min}, {y_min}, {width}, {height}]"
 
         html += f"""         
         <tr>          
             <td>{tooth_number}</td>           
-            <td>{left}</td>           
-            <td>{top}</td> 
-            <td>{width}</td> 
-            <td>{height}</td> 
+            <td>{bbxo}</td>
             <td> 
                 <img src="{cropped}" alt="Cropped" style="height: 50px; width: auto;"/>
             </td>
@@ -190,7 +201,6 @@ def build_html_table(dataframe):
 current_image = get_current_image()
 if current_image is not None:
     
-    TARGET_IMAGE_SIZE = 500
     resized_image = current_image.resize((TARGET_IMAGE_SIZE, TARGET_IMAGE_SIZE), Image.LANCZOS)
 
     # Display the canvas with the overlayed image
@@ -199,7 +209,7 @@ if current_image is not None:
         stroke_width=2,
         background_color="#FFFFFF",
         update_streamlit=True,
-        stroke_color=theme_colors["primary"],
+        stroke_color="#cf0029",
         background_image=resized_image,
         width=TARGET_IMAGE_SIZE,
         height=TARGET_IMAGE_SIZE,
@@ -215,15 +225,17 @@ if current_image is not None:
         for obj in new_objects:
             
             height, width = obj["height"], obj["width"]
-            left, top = obj["left"], obj["top"]
+            x_min, y_min = obj["left"], obj["top"]
             
-            
-            cropped_image = resized_image.crop((left, top, left + width, top + height))
+            cropped_image = resized_image.crop((x_min, y_min, x_min + width, y_min + height))
             data_url = pil_image_to_data_url(cropped_image)
+            
+            # Standardize the bbox format
+            x_min, y_min, width, height = standardize_bbox(x_min, y_min, width, height)
             
             row = {
                 "tooth_number": st.session_state.tooth_number,
-                "left": left, "top": top,
+                "x_min": x_min, "y_min": y_min,
                 "width": width, "height": height,
                 "cropped_image": data_url,
             }
@@ -249,8 +261,9 @@ else:
     
 # Zoom in
 # click and build a bounding box around the tooth
-# normalize the coordiantes
+# normalize the coordiantes -> ok
 # Move stuff to .css file
+# Save and remove the annotations
         # weak labelling for object detetion (?)
         
         

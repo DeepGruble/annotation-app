@@ -4,6 +4,13 @@ App is deployd via Streamlit cloud ([Link](https://annotation-app-qn7tayj2q3oyon
 Whenever the changes in the code are pushed to the main branch, the app is automatically updated.
 
 
+# Model to Be Used
+
+Insert info about DETR model here.
+
+Data format: `x_min, y_min, x_max, y_max, class_id` normalized to [0, 1].
+
+
 ### User Tasks
 
 - **Teeth Numbering [Peter: Tooth Tagging/Numbering]**
