@@ -6,6 +6,8 @@ from streamlit_theme import st_theme
 import pandas as pd
 from io import BytesIO
 import base64
+import time
+
 from teeth_utils import *
 from colormaps import *
 from annotations import Annotations
@@ -84,7 +86,7 @@ if "images" not in st.session_state:
     st.session_state.tooth_number = 1  
     st.session_state.processed_object_count = 0
     st.session_state.coco_data = Annotations()
-            
+    st.session_state.canvas_key = "canvas"
 
 def get_current_image():
     """
@@ -104,6 +106,8 @@ def next_image():
     st.session_state.annotation_df = pd.DataFrame(columns=[
         "tooth_number", "x_min", "y_min", "width", "height", "cropped_image"])
     st.session_state.tooth_number = 1
+    # Update the canvas key to clear the canvas
+    st.session_state.canvas_key = f"canvas_{st.session_state.current_image_index}"
     st.rerun()
 
 # ===============================================================
@@ -162,11 +166,17 @@ with st.sidebar:
                     [row["x_min"], row["y_min"], 
                      row["width"], row["height"]])
                 
-            # Save the annotations
             if st.session_state.coco_data.save_annotations(SAVE_PATH):
-                st.success("Annotations saved successfully.")
+                # Create a placeholder for the success message
+                success_placeholder = st.empty()
+                success_placeholder.success("Annotations saved successfully.")
+                # Wait for n seconds
+                time.sleep(1)
+                # Clear the success message
+                success_placeholder.empty()
             else:
                 st.error("Failed to save annotations.")
+        
             
             # Show the next image
             next_image()
@@ -226,7 +236,7 @@ if current_image is not None:
         width=TARGET_IMAGE_SIZE,
         height=TARGET_IMAGE_SIZE,
         drawing_mode="rect",
-        key="canvas",
+        key=st.session_state.canvas_key
     )
             
     # Handle canvas result
