@@ -3,3 +3,6 @@ output/
 
 .venv/
 __pycache__/
+
+notebooks/
+.env
