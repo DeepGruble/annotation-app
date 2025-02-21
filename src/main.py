@@ -177,7 +177,6 @@ with st.sidebar:
             else:
                 st.error("Failed to save annotations.")
         
-            
             # Show the next image
             next_image()
 
@@ -186,6 +185,11 @@ with st.sidebar:
             # Show the next image
             next_image()
             
+            
+def delete_annotation(idx):
+    st.session_state.annotation_df.drop(idx, inplace=True)
+    st.session_state.annotation_df.reset_index(drop=True, inplace=True)
+    st.rerun()
 
 def build_html_table(dataframe):     
     
@@ -195,10 +199,10 @@ def build_html_table(dataframe):
         <tr>
             <th>Number</th>         
             <th>Bbox</th>                
-            <th>Tooth Image</th>       
+            <th>Tooth Image</th>   
         </tr>"""
     
-    for _, row in dataframe.iterrows():         
+    for idx, row in dataframe.iterrows():         
         tooth_number = NUMBERING_SYSTEM[row["tooth_number"] - 1]     
         x_min, y_min = row["x_min"], row["y_min"]    
         width, height = row["width"], row["height"]         
@@ -236,7 +240,23 @@ if current_image is not None:
         width=TARGET_IMAGE_SIZE,
         height=TARGET_IMAGE_SIZE,
         drawing_mode="rect",
-        key=st.session_state.canvas_key
+        key=st.session_state.canvas_key,
+        initial_drawing={
+        "version": "4.4.0",
+        "objects": [
+            {
+                "type": "rect",
+                "left": row["x_min"],
+                "top": row["y_min"],
+                "width": row["width"],
+                "height": row["height"],
+                "fill": "rgba(0,0,0,0)",
+                "stroke": "#cf0029",
+                "strokeWidth": 2
+            }
+            for _, row in st.session_state.annotation_df.iterrows()
+        ]
+    },
     )
             
     # Handle canvas result
@@ -272,8 +292,14 @@ if current_image is not None:
             table_html = build_html_table(st.session_state.annotation_df) 
             # Display the table with unsafe_allow_html=True 
             st.markdown(table_html, unsafe_allow_html=True)
+            
+             # Button to remove the last annotation
+            if st.button("Remove Last Annotation"):
+                # Remove the last row from the annotation dataframe and redraw the UI
+                if not st.session_state.annotation_df.empty:
+                    st.session_state.annotation_df.drop(st.session_state.annotation_df.index[-1], inplace=True)
+                    st.rerun()
 
- 
 else:
     st.warning("No images to display. Please check the image directory.")
     
