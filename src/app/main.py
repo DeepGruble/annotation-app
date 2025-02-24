@@ -7,13 +7,16 @@ import pandas as pd
 from io import BytesIO
 import base64
 import time
+import sys
 
 from teeth_utils import *
 from colormaps import *
 from annotations import Annotations
 
 # Constants
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+print(ROOT)
+sys.exit()
 DATA_PATH = os.path.join(ROOT, "temp_images")
 SAVE_PATH = os.path.join(ROOT, "output")
 if not os.path.exists(SAVE_PATH):
