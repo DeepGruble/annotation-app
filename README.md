@@ -64,9 +64,41 @@ The main dashboard should provide an overview of the annotation progress for eac
 
 # Tasks TODO:
 
-1) Save the bounding boxes after user clicks the submit button.
+1) ~~Save the bounding boxes after user clicks the submit button.~~
 2) Add functionality to delete the bounding boxes (both from canvas and from the list of bounding boxes).
 3) (*) Add functionality to edit the bounding boxes.
 4) ~~Add functionality to skip the image.~~
 5) Zoom in/out functionality.
 6) ~~Automatic app deployment using streamlit website (https://share.streamlit.io/new)~~
+
+
+# Google cloud
+
+1. Data Storage
+* Use Cloud Storage to store images.
+* Use Cloud Functions / Cloud Run to receive and process images from client systems.
+
+2. Annotation System:
+* Deploy Streamlit annotation tool on Cloud Run 
+  * Need to add a Dockerfile for this
+  ```bash
+  # Build Docker image
+  gcloud builds submit --tag gcr.io/[YOUR_PROJECT_ID]/annotation-app
+
+  # Deploy to cloud Run
+  gcloud run deploy annotation-app \
+  --image gcr.io/[YOUR_PROJECT_ID]/streamlit-annotation-app \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated
+  ```
+
+* Store annotation results in Firestore or BigQuery.
+
+3. Model Training & Evaluation:
+* Use Vertex AI for managed model training.
+* Store model weights and logs in Cloud Storage.
+* Evaluate performance and store metrics in BigQuery or Cloud Monitoring.
+
+4. Iteration & Automation:
+* Automate the pipeline using Cloud Composer (Airflow) or Cloud Functions to trigger training/evaluation when enough new annotated data is available.
