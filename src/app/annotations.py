@@ -18,11 +18,13 @@ class Annotations:
             })
         return categories
     
-    def add_image(self, image_id, file_name):
+    def add_image(self, image_id, file_name, image_size=None):
         self.images.append({
             "id": image_id,
-            "file_name": file_name
+            "file_name": file_name,
         })
+        if image_size:
+            self.images[-1]["width"], self.images[-1]["height"] = image_size
         
     def add_annotation(self, annotation_id, image_id, category_id, bbox):
         self.annotations.append({

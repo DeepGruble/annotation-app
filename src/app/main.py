@@ -101,6 +101,7 @@ def next_image():
     st.session_state.current_image_index += 1
     if st.session_state.current_image_index >= len(st.session_state.images):
         # FIXME: This needs to be more sophisticated
+        st.balloons()
         st.success("All images have been annotated.")
         st.stop()
     st.session_state.processed_object_count = 0
@@ -158,7 +159,10 @@ with st.sidebar:
             image_id = st.session_state.current_image_index
             
             # Add this image to the coco data
-            st.session_state.coco_data.add_image(image_id, f"image_{image_id}.jpg")
+            # FIXME: Not sure about the TARGET_IMAGE_SIZE
+            # It depends on how the aanotated images will be saved and whther they will be resized before or after
+            st.session_state.coco_data.add_image(
+                image_id, f"image_{image_id}.jpg", image_size=TARGET_IMAGE_SIZE)   
         
             for idx, row in st.session_state.annotation_df.iterrows():
                 st.session_state.coco_data.add_annotation(
@@ -307,11 +311,17 @@ else:
     
 # Zoom in
 # click and build a bounding box around the tooth
-# normalize the coordiantes -> ok
 # Move stuff to .css file
 # Save and remove the annotations
         # weak labelling for object detetion (?)
         
+        
+"""
+Project Plan
+
+To talk about
+
+"""
         
         
 

@@ -30,6 +30,7 @@ colormap_dark = {
     "primary": "#68EDC6",
     "secondary": "#ADBDFF",
     "accent": "#3185FC",
+    "shadow": (255,255,255,0.15),
 }
 colormap_dark["partial"] = blend_hex_colors(colormap_dark["secondary"], colormap_dark["accent"], 0.5)
 
@@ -40,6 +41,7 @@ colormap_light = {
     "primary": "#8AA1FF",
     "secondary": "#BCE784",
     "accent": "#5DD39E",
+    "shadow": (0,0,0,0.1),
 }
 colormap_light["partial"] = blend_hex_colors(colormap_light["secondary"], colormap_light["accent"], 0.5)
 

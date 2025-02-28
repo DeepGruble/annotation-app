@@ -1,3 +1,4 @@
+/* Main Buttons */
 .stButton>button {{
     background-color: {secondary};
     border: 1px solid {secondary};
@@ -5,34 +6,47 @@
     border-radius: 5px;
     padding: 10px 20px;
     font-size: 10px;
-    transition: background-color 0.1s, border-color 0.1s;
+    transition: all 0.1s ease;
+    box-shadow: 0 1px 3px rgba({shadow[0]}, {shadow[1]}, {shadow[2]}, {shadow[3]});
+
 }}
 .stButton>button:hover {{
     background-color: {partial};
     border: 1px solid {partial};
     color: {text};
+    transform: translateY(-1px);
 }}
 .stButton>button:active {{
     background-color: {accent};
     border: 1px solid {accent};
     color: {text};
 }}
+
+/* Teeth Number Buttons */
 .tooth-buttons {{
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
     width: 100%;
+    gap: 4px;
+    margin: 10px 0;
 }}
 .element-container:has(#button-after) + div button {{
     background-color: transparent;
-    font-size: 0.1em !important;
+    font-size: 10px;
     color: {text};
     border: 1px solid {secondary};
-    height: 4px;
+    height: 25px;
     width: 25px;
     border-radius: 5px;
     padding: 2px;
     cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease;
 }}
 .element-container:has(#button-after) + div button:hover {{
     border: 2px solid {partial};
@@ -40,14 +54,14 @@
 .element-container:has(#button-after) + div button:active {{
     background-color: {accent};
     border: 2px solid {accent};
+    transform: scale(0.95);
 }}
 .element-container:has(#button-after) + div button:focus {{
     background-color: {accent}; 
     border: 2px solid {accent};
 }}
-.stSlider > div[data-baseweb="slider"] {{
 
-}}
+/* Sidebar styling */
 [data-testid="stSidebar"][aria-expanded="true"] {{
     width: 450px;
     min-width: 450px;
@@ -57,17 +71,46 @@
     min-width: 450px;
     margin-left: -450px;
 }}
+
+/* Table styling */
 table {{
     border-collapse: collapse;
     width: 100%;
+    border: 1px solid {secondary};
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 15px 0;
+    box-shadow: 0 2px 5px rgba({shadow[0]}, {shadow[1]}, {shadow[2]}, {shadow[3]});
 }}
-th, td {{
-    border: 1.5px solid "#999";
-    padding: 3px;
-    text-align: left;
-}}
+/* Table Header */
 th {{
     background-color: {background2};
     color: {text};
+    font-weight: 600;
+    padding: 12px 8px;
+    text-align: left;
+    border-bottom: 2px solid {secondary};
+}}
+td {{
+    border: 1px solid {secondary};
+    padding: 8px;
+    text-align: left;
+    vertical-align: middle;
+}}
+td img {{
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba({shadow[0]}, {shadow[1]}, {shadow[2]}, {shadow[3]});
 }}
 
+/* Canvas container styling */
+[data-testid="stImage"] {{
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba({shadow[0]}, {shadow[1]}, {shadow[2]}, {shadow[3]});
+}}
+
+/* Progress bar styling */
+[role="progressbar"] {{
+    border-radius: 4px;
+    height: 8px !important;
+}}
