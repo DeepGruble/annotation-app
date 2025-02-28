@@ -5,4 +5,9 @@ output/
 __pycache__/
 
 notebooks/
-.env
+
+
+src/zendesk/__pycache__/
+src/zendesk/zendesk_data/
+src/zendesk/.env
+src/zendesk/zendesk_viewer.ipynb

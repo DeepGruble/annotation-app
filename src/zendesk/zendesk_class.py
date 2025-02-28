@@ -88,3 +88,17 @@ class Zendesk:
                 print(f"Ticket {ticket.id} already exists in {root}.")
                 continue
             self.retrieve_dental_images(ticket.id, temp_root)
+            
+            
+
+if __name__ == "__main__":
+    z = Zendesk()
+    z.retrieve_all_image_data("data")
+    
+    # Example usage
+    # z.retrieve_dental_images(123, "data")
+    # z.retrieve_all_image_data("data", break_after=10)
+    # z.get_view_tickets()
+    # z.retrieve_dental_images(123, "data")
+    
+    

@@ -15,8 +15,6 @@ from annotations import Annotations
 
 # Constants
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-print(ROOT)
-sys.exit()
 DATA_PATH = os.path.join(ROOT, "temp_images")
 SAVE_PATH = os.path.join(ROOT, "output")
 if not os.path.exists(SAVE_PATH):
@@ -24,7 +22,7 @@ if not os.path.exists(SAVE_PATH):
 
 TARGET_IMAGE_SIZE = 500
 
-    
+
 def pil_image_to_data_url(img):
     """
     Convert a PIL image to a data URL.
