@@ -1,15 +1,7 @@
-from enum import Enum
+from annotation_template import *
+from annotations import ToothNumberAnnotations, AnnomalyAnnotations
 
-
-class ImgeType(Enum):
-    BITEWING = "bitewing"
-    COLOR_PANORAMIC = "color_panoramic"
-    COLOR_ZOOM = "color_zoom"
-    PANORAMIC = "panoramic"
-    PERIAPICAL = "periapical"
-
-
-DANISH_NUMBERING = [
+DANISH_LABELS = [
     # Top row, left to right, left side
     "8+", "7+", "6+", "5+", "4+", "3+", "2+", "1+",
     # Top row, left to right, right side
@@ -21,7 +13,7 @@ DANISH_NUMBERING = [
     "-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8"
 ]
 
-INTERNATIONAL_NUMBERING = [
+INTERNATIONAL_LABELS = [
     # Top row, left to right, left side
     "18", "17", "16", "15", "14", "13", "12", "11",
     # Top row, left to right, right side
@@ -33,5 +25,12 @@ INTERNATIONAL_NUMBERING = [
     "31", "32", "33", "34", "35", "36", "37", "38"
 ]
 
-IMAGE_TYPE = ImgeType.COLOR_PANORAMIC
-NUMBERING_SYSTEM = DANISH_NUMBERING
+
+LABELS = {
+    "Danish": DANISH_LABELS,
+    "International": INTERNATIONAL_LABELS 
+}
+
+coco_annotation = ToothNumberAnnotations()
+init_session_state(coco_annotation)
+annotation_page("Dental Numbering Annotation", LABELS)

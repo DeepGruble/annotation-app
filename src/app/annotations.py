@@ -1,22 +1,19 @@
 import os
 import json
+from abc import ABC, abstractmethod
 
-class Annotations:
+
+class Annotations(ABC):
     
-    def __init__(self):
+    def __init__(self, type):
+        self.type = type
         self.images = []
         self.annotations = []
         self.categories = self.initialize_categories()
-        
+
+    @abstractmethod
     def initialize_categories(self):
-        categories = [] 
-        for i in range(1, 33):
-            categories.append({
-                "id": i,
-                "name": f"tooth_{i}",
-                "supercategory": "tooth"
-            })
-        return categories
+        pass
     
     def add_image(self, image_id, file_name, image_size=None):
         image_dict ={
@@ -39,8 +36,12 @@ class Annotations:
         })
     
     def save_annotations(self, save_path):
+        save_folder = os.path.join(save_path, self.type)
+        if not os.path.exists(save_folder):
+            os.makedirs(save_folder)
+            
         try:
-            with open(os.path.join(save_path, "annotations.json"), "w") as f:
+            with open(save_folder + "/annotations.json", "w") as f:
                 json.dump({
                     "images": self.images,
                     "annotations": self.annotations,
@@ -50,3 +51,39 @@ class Annotations:
         except Exception as e:
             print(f"Error saving annotations: {e}")
             return False
+
+
+class ToothNumberAnnotations(Annotations):
+    
+    def __init__(self):
+        super().__init__("tooth_numbers")
+        
+        
+    def initialize_categories(self):
+        categories = [] 
+        for i in range(1, 33):
+            categories.append({
+                "id": i,
+                "name": f"tooth_{i}",
+                "supercategory": "tooth"
+            })
+        return categories
+    
+    
+
+class AnnomalyAnnotations(Annotations):
+    
+    def __init__(self):
+        super().__init__("anomalies")
+        
+    def initialize_categories(self):
+        categories = [] 
+        # FIXME: A placeholder for the anomaly categories
+        anomalies = ["caries", "crown", "cavity", "missing", "filling", "bridge", "other"]
+        for i in range(len(anomalies)):
+            categories.append({
+                "id": i,
+                "name": anomalies[i],
+                "supercategory": "anomaly"
+            })
+        return categories
