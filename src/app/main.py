@@ -20,6 +20,7 @@ SAVE_PATH = os.path.join(ROOT, "output")
 if not os.path.exists(SAVE_PATH):
     os.makedirs(SAVE_PATH)
 
+# Defines the canvas size
 TARGET_IMAGE_SIZE = 500
 
 
@@ -54,6 +55,7 @@ def read_images(image_type=None):
 st.set_page_config(layout="wide", page_title=f"Numbering Tool - {IMAGE_TYPE.value}")
 
 # Detect which theme is being used
+# FIXME: This is not an elegant solution
 try:
     theme = st_theme()["base"]
     theme_colors = colormap_light if theme == "light" else colormap_dark
@@ -85,6 +87,7 @@ if "images" not in st.session_state:
         "cropped_image"])
     # Set default tooth number
     st.session_state.tooth_number = 1  
+    # Helps to keep track of the number of objects processed in the canvas
     st.session_state.processed_object_count = 0
     st.session_state.coco_data = Annotations()
     st.session_state.canvas_key = "canvas"
@@ -98,29 +101,45 @@ def get_current_image():
         return st.session_state.images[st.session_state.current_image_index]
     return None
 
+def reset_session_state():
+    """
+    Reset the session state (clear the annotation dataframe and reset the tooth number).
+    """
+    st.session_state.processed_object_count = 0
+    st.session_state.tooth_number = 1       # Default tooth number
+    st.session_state.annotation_df = pd.DataFrame(columns=[
+        "tooth_number", 
+        "x_min", "y_min", 
+        "width", "height", 
+        "cropped_image"])
+    # Update the canvas key to clear the canvas
+    st.session_state.canvas_key = f"canvas_{st.session_state.current_image_index}"
+    st.rerun()
+
 def next_image():
+    """
+    Move to the next image in the list and reset the annotation dataframe.
+    """
     st.session_state.current_image_index += 1
     if st.session_state.current_image_index >= len(st.session_state.images):
-        # FIXME: This needs to be more sophisticated
         st.success("All images have been annotated.")
         st.stop()
-    st.session_state.processed_object_count = 0
-    st.session_state.annotation_df = pd.DataFrame(columns=[
-        "tooth_number", "x_min", "y_min", "width", "height", "cropped_image"])
-    st.session_state.tooth_number = 1
-    # Update the canvas key to clear the canvas
-    st.session_state.canvas_key = f"canvas_{st.session_state.current_image_index}"
-    st.rerun()
+    reset_session_state()
+    
     
 def previous_image():
+    """
+    Move to the previous image in the list and reset the annotation dataframe.
+    """
     st.session_state.current_image_index -= 1
-    st.session_state.processed_object_count = 0
-    st.session_state.annotation_df = pd.DataFrame(columns=[
-        "tooth_number", "x_min", "y_min", "width", "height", "cropped_image"])
-    st.session_state.tooth_number = 1
-    # Update the canvas key to clear the canvas
-    st.session_state.canvas_key = f"canvas_{st.session_state.current_image_index}"
+    reset_session_state()
+    
+    
+def delete_annotation(idx):
+    st.session_state.annotation_df.drop(idx, inplace=True)
+    st.session_state.annotation_df.reset_index(drop=True, inplace=True)
     st.rerun()
+    
     
 def toggle_help():
     st.session_state.show_help = not st.session_state.show_help
@@ -129,38 +148,39 @@ def toggle_help():
 # Streamlit UI
 # ===============================================================
 
-# Sidebar for controls
+# ===============================================================
+# SIDEBAR
+# ===============================================================
+
 with st.sidebar:
     
+    # 1. Progress bar for the annotation process
     st.markdown("### Annotation Progress")
-    progress_val = (st.session_state.current_image_index + 1) / len(st.session_state.images)
-    st.progress(progress_val)
+    progress_value = (st.session_state.current_image_index + 1) / len(st.session_state.images)
+    st.progress(progress_value)
     
-    remaining = len(st.session_state.images) - (st.session_state.current_image_index + 1)
+    num_remaining_images = len(st.session_state.images) - (st.session_state.current_image_index + 1)
     st.markdown(f"""
         <div style="display: flex; justify-content: space-between;">
             <span>Image <b>{st.session_state.current_image_index + 1}</b> of <b>{len(st.session_state.images)}</b></span>
-            <span><b>{remaining}</b> remaining</span>
+            <span><b>{num_remaining_images}</b> remaining</span>
         </div>
     """, unsafe_allow_html=True)
     
     st.divider()
+    # ===============================================================
     
-    #  Create a grid of buttons for tooth selection
+    # 2. Radio Buttons for Selecting the Tooth Numbering System
     st.markdown("### Numbering System")
     
-    # Allow the user to select the numbering system
-
-    # Inject custom CSS
     numbering_system_radio = st.radio(label="Numbering System", options=["Danish", "International"])
     NUMBERING_SYSTEM = DANISH_NUMBERING if numbering_system_radio == "Danish" else INTERNATIONAL_NUMBERING
     
     st.divider()
+    # ===============================================================
     
+    #  3. Create a grid of buttons for tooth selection
     st.markdown("### Select the Tooth Number to Annotate")
-
-    # Open a div wrapper
-    #st.markdown('<div class="tooth-buttons">', unsafe_allow_html=True)
     
     cols = st.columns(16)
     for i, tooth in enumerate(list(range(1, 33))):
@@ -170,18 +190,14 @@ with st.sidebar:
             if st.button(f"{tooth_name}", key=f"button{tooth}"):
                 st.session_state.tooth_number = tooth
                 print(f"Tooth {tooth} selected")
-    # Close the div wrapper
-    #st.markdown('</div>', unsafe_allow_html=True)  
     
     st.divider()
+    # ===============================================================
     
-    # Main action buttons
+    # 4. User Action Buttons
     st.markdown("### Actions")
     
-     # Main buttons
-
     if st.button("Submit", type="primary", use_container_width=True):
-        
         
         # FIXME: Theese have to be unique
         # This image should be either stored in a database with unique id or this image should be saved now in a dedicated folder
@@ -197,8 +213,7 @@ with st.sidebar:
             st.session_state.coco_data.add_annotation(
                 idx, 
                 image_id, row["tooth_number"], 
-                [row["x_min"], row["y_min"], 
-                    row["width"], row["height"]])
+                [row["x_min"], row["y_min"], row["width"], row["height"]])
             
         if st.session_state.coco_data.save_annotations(SAVE_PATH):
             # Create a placeholder for the success message
@@ -223,20 +238,17 @@ with st.sidebar:
     with col1:
         # Disable the Next button if we're at the last image
         next_disabled = st.session_state.current_image_index >= len(st.session_state.images) - 1
-        if st.button("Next Image", use_container_width=True, disabled=next_disabled):
+        if st.button("Next Image", use_container_width=True, disabled=next_disabled, type="primary"):
             next_image()
     with col2:
         # Disable the Previous button if we're at the first image
         prev_disabled = st.session_state.current_image_index <= 0
-        if st.button("Previous Image", use_container_width=True, disabled=prev_disabled):
+        if st.button("Previous Image", use_container_width=True, disabled=prev_disabled, type="primary"):
             previous_image()
-
             
-            
-def delete_annotation(idx):
-    st.session_state.annotation_df.drop(idx, inplace=True)
-    st.session_state.annotation_df.reset_index(drop=True, inplace=True)
-    st.rerun()
+# ===============================================================
+# MAIN PAGE
+# ===============================================================          
 
 def build_html_table(dataframe):     
     
@@ -249,18 +261,17 @@ def build_html_table(dataframe):
             <th>Tooth Image</th>   
         </tr>"""
     
-    for idx, row in dataframe.iterrows():         
+    for _, row in dataframe.iterrows():         
         tooth_number = NUMBERING_SYSTEM[row["tooth_number"] - 1]     
         x_min, y_min = row["x_min"], row["y_min"]    
         width, height = row["width"], row["height"]         
         cropped = row["cropped_image"]
-        
-        bbxo = f"[{x_min}, {y_min}, {width}, {height}]"
+        bbox = f"[{x_min}, {y_min}, {width}, {height}]"
 
         html += f"""         
         <tr>          
             <td>{tooth_number}</td>           
-            <td>{bbxo}</td>
+            <td>{bbox}</td>
             <td> 
                 <img src="{cropped}" alt="Cropped" style="height: 50px; width: auto;"/>
             </td>
@@ -268,6 +279,17 @@ def build_html_table(dataframe):
     
     html += "</table>"
     return html
+
+
+def annotation_exists(x_min, y_min, width, height):
+    if st.session_state.annotation_df[
+        (st.session_state.annotation_df["x_min"] == x_min) &
+        (st.session_state.annotation_df["y_min"] == y_min) &
+        (st.session_state.annotation_df["width"] == width) &
+        (st.session_state.annotation_df["height"] == height)
+        ].empty:
+        return False
+    return True
 
 
 # Display current image and progress
@@ -309,13 +331,9 @@ if current_image is not None:
         "objects": [
             {
                 "type": "rect",
-                "left": row["x_min"],
-                "top": row["y_min"],
-                "width": row["width"],
-                "height": row["height"],
-                "fill": "rgba(0,0,0,0)",
-                "stroke": "#cf0029",
-                "strokeWidth": 2
+                "left": row["x_min"], "top": row["y_min"],
+                "width": row["width"], "height": row["height"],
+                "fill": "rgba(0,0,0,0)", "stroke": "#cf0029", "strokeWidth": 2
             }
             for _, row in st.session_state.annotation_df.iterrows()
         ]
@@ -331,6 +349,9 @@ if current_image is not None:
             
             height, width = obj["height"], obj["width"]
             x_min, y_min = obj["left"], obj["top"]
+            # Check if the annotation already exists
+            if annotation_exists(x_min, y_min, width, height):
+                continue
             
             cropped_image = resized_image.crop((x_min, y_min, x_min + width, y_min + height))
             data_url = pil_image_to_data_url(cropped_image)
@@ -357,7 +378,7 @@ if current_image is not None:
             st.markdown(table_html, unsafe_allow_html=True)
             
              # Button to remove the last annotation
-            if st.button("Remove Last Annotation"):
+            if st.button("Remove Last Annotation", type="primary"):
                 # Remove the last row from the annotation dataframe and redraw the UI
                 if not st.session_state.annotation_df.empty:
                     st.session_state.annotation_df.drop(st.session_state.annotation_df.index[-1], inplace=True)
@@ -367,16 +388,13 @@ else:
     st.warning("No images to display. Please check the image directory.")
     
     
-# Zoom in
-# click and build a bounding box around the tooth
-# Move stuff to .css file
-# Save and remove the annotations
-        # weak labelling for object detetion (?)
-        
-        
-#Project Plan
-
-#To talk about
+# Zoom in functionality
+# Toggle Help button
+# Fix Numbering System Text
+# Bounding Boxes are doubled
+    # Fixed it but more testing needed
+# Fix inital theme selection
+# Improve the divider
 
         
         
