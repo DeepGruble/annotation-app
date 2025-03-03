@@ -7,7 +7,6 @@ import pandas as pd
 from io import BytesIO
 import base64
 import time
-import sys
 
 from teeth_utils import *
 from colormaps import *
@@ -91,7 +90,7 @@ if "images" not in st.session_state:
     st.session_state.processed_object_count = 0
     st.session_state.coco_data = Annotations()
     st.session_state.canvas_key = "canvas"
-    st.session_state.show_help = False
+
 
 def get_current_image():
     """
@@ -142,7 +141,8 @@ def delete_annotation(idx):
     
     
 def toggle_help():
-    st.session_state.show_help = not st.session_state.show_help
+    # Create a pop up window with the help text
+    pass
 
 # ===============================================================
 # Streamlit UI
@@ -171,8 +171,7 @@ with st.sidebar:
     # ===============================================================
     
     # 2. Radio Buttons for Selecting the Tooth Numbering System
-    st.markdown("### Numbering System")
-    
+
     numbering_system_radio = st.radio(label="Numbering System", options=["Danish", "International"])
     NUMBERING_SYSTEM = DANISH_NUMBERING if numbering_system_radio == "Danish" else INTERNATIONAL_NUMBERING
     
@@ -230,21 +229,22 @@ with st.sidebar:
         next_image()
         
     # Help button
-    if st.button("Toggle Help", use_container_width=True):
+    if st.button("Toggle Help", use_container_width=True, type="primary"):
         toggle_help()
         
     # Create two columns for the next and previous buttons
     col1, col2 = st.columns(2)
     with col1:
-        # Disable the Next button if we're at the last image
-        next_disabled = st.session_state.current_image_index >= len(st.session_state.images) - 1
-        if st.button("Next Image", use_container_width=True, disabled=next_disabled, type="primary"):
-            next_image()
-    with col2:
         # Disable the Previous button if we're at the first image
         prev_disabled = st.session_state.current_image_index <= 0
         if st.button("Previous Image", use_container_width=True, disabled=prev_disabled, type="primary"):
             previous_image()
+    with col2:
+        # Disable the Next button if we're at the last image
+        next_disabled = st.session_state.current_image_index >= len(st.session_state.images) - 1
+        if st.button("Next Image", use_container_width=True, disabled=next_disabled, type="primary"):
+            next_image()
+        
             
 # ===============================================================
 # MAIN PAGE
@@ -295,23 +295,7 @@ def annotation_exists(x_min, y_min, width, height):
 # Display current image and progress
 current_image = get_current_image()
 if current_image is not None:
-    
-    # Display instructions if help is toggled on
-    if st.session_state.show_help:
-        with st.expander("How to use this tool", expanded=True):
-            st.markdown("""
-            ### Quick Instructions:
-            1. **Select a tooth number** from the sidebar
-            2. **Draw a bounding box** around the corresponding tooth in the image
-            3. Repeat for all teeth you want to annotate
-            4. Click **Save Annotations** when done with this image
-            
-            ### Tips:
-            - Use the zoom slider to get a better view for small teeth
-            - You can delete individual annotations from the table below
-            - All annotated teeth are shown in the table with previews
-            """)
-    
+       
     resized_image = current_image.resize((TARGET_IMAGE_SIZE, TARGET_IMAGE_SIZE), Image.LANCZOS)
 
     # Display the canvas with the overlayed image
@@ -391,10 +375,13 @@ else:
 # Zoom in functionality
 # Toggle Help button
 # Fix Numbering System Text
-# Bounding Boxes are doubled
-    # Fixed it but more testing needed
+    # Bounding Boxes are doubled
+        # Fixed it but more testing needed
 # Fix inital theme selection
 # Improve the divider
+# Idea: Disable the tooth number buttons that have already been annotated
+
+# How to make this a template for both annotation types (nubering and anomalies)?
 
         
         
