@@ -163,6 +163,38 @@ def init_session_state(coco_annotations):
         st.session_state.canvas_key = "canvas"
         
         
+def build_html_table(dataframe):     
+    
+    # Start HTML string for table   
+    html = f"""     
+    <table>       
+        <tr>
+            <th>Label</th>         
+            <th>Bbox</th>                
+            <th>Cropped Image</th>   
+        </tr>"""
+    
+    for _, row in dataframe.iterrows():         
+        label_id = row["label"]
+        label = st.session_state.current_labels[label_id]
+        x_min, y_min = row["x_min"], row["y_min"]    
+        width, height = row["width"], row["height"]         
+        cropped = row["cropped_image"]
+        bbox = f"[{x_min}, {y_min}, {width}, {height}]"
+
+        html += f"""         
+        <tr>          
+            <td>{label}</td>           
+            <td>{bbox}</td>
+            <td> 
+                <img src="{cropped}" alt="Cropped" style="height: 50px; width: auto;"/>
+            </td>
+        </tr> """
+    
+    html += "</table>"
+    return html
+
+        
 def create_sidebar(labels):
     with st.sidebar:
     
@@ -295,8 +327,11 @@ def create_main_page():
         if st.session_state.annotation_df.empty: 
             st.write("No annotations yet.") 
         else: 
+            table_html = build_html_table(st.session_state.annotation_df) 
+            # Display the table with unsafe_allow_html=True 
+            st.markdown(table_html, unsafe_allow_html=True)
             
-             # Button to remove the last annotation
+            # Button to remove the last annotation
             if st.button("Remove Last Annotation", type="primary"):
                 # Remove the last row from the annotation dataframe and redraw the UI
                 if not st.session_state.annotation_df.empty:

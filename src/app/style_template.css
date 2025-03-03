@@ -29,16 +29,6 @@
 }}
 
 /* Teeth Number Buttons */
-.tooth-buttons {{
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    gap: 4px;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-}}
 .element-container:has(#button-after) + div button {{
     background-color: transparent;
     font-size: 10px;
