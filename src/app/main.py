@@ -88,6 +88,7 @@ if "images" not in st.session_state:
     st.session_state.processed_object_count = 0
     st.session_state.coco_data = Annotations()
     st.session_state.canvas_key = "canvas"
+    st.session_state.show_help = False
 
 def get_current_image():
     """
@@ -101,7 +102,6 @@ def next_image():
     st.session_state.current_image_index += 1
     if st.session_state.current_image_index >= len(st.session_state.images):
         # FIXME: This needs to be more sophisticated
-        st.balloons()
         st.success("All images have been annotated.")
         st.stop()
     st.session_state.processed_object_count = 0
@@ -111,6 +111,19 @@ def next_image():
     # Update the canvas key to clear the canvas
     st.session_state.canvas_key = f"canvas_{st.session_state.current_image_index}"
     st.rerun()
+    
+def previous_image():
+    st.session_state.current_image_index -= 1
+    st.session_state.processed_object_count = 0
+    st.session_state.annotation_df = pd.DataFrame(columns=[
+        "tooth_number", "x_min", "y_min", "width", "height", "cropped_image"])
+    st.session_state.tooth_number = 1
+    # Update the canvas key to clear the canvas
+    st.session_state.canvas_key = f"canvas_{st.session_state.current_image_index}"
+    st.rerun()
+    
+def toggle_help():
+    st.session_state.show_help = not st.session_state.show_help
 
 # ===============================================================
 # Streamlit UI
@@ -119,23 +132,36 @@ def next_image():
 # Sidebar for controls
 with st.sidebar:
     
-    st.markdown("### Progress")
-    st.progress((st.session_state.current_image_index + 1) / len(st.session_state.images))
-    st.write(f"Image {st.session_state.current_image_index + 1} of {len(st.session_state.images)}")
+    st.markdown("### Annotation Progress")
+    progress_val = (st.session_state.current_image_index + 1) / len(st.session_state.images)
+    st.progress(progress_val)
+    
+    remaining = len(st.session_state.images) - (st.session_state.current_image_index + 1)
+    st.markdown(f"""
+        <div style="display: flex; justify-content: space-between;">
+            <span>Image <b>{st.session_state.current_image_index + 1}</b> of <b>{len(st.session_state.images)}</b></span>
+            <span><b>{remaining}</b> remaining</span>
+        </div>
+    """, unsafe_allow_html=True)
     
     st.divider()
     
     #  Create a grid of buttons for tooth selection
-    st.markdown("### Tooth Selection")
+    st.markdown("### Numbering System")
     
     # Allow the user to select the numbering system
-    numbering_system_radio = st.radio("Numbering System", ["Danish", "International"])
+
+    # Inject custom CSS
+    numbering_system_radio = st.radio(label="Numbering System", options=["Danish", "International"])
     NUMBERING_SYSTEM = DANISH_NUMBERING if numbering_system_radio == "Danish" else INTERNATIONAL_NUMBERING
     
-    st.markdown("Select the tooth number to annotate:")
+    st.divider()
     
+    st.markdown("### Select the Tooth Number to Annotate")
+
     # Open a div wrapper
-    st.markdown('<div class="tooth-buttons">', unsafe_allow_html=True)
+    #st.markdown('<div class="tooth-buttons">', unsafe_allow_html=True)
+    
     cols = st.columns(16)
     for i, tooth in enumerate(list(range(1, 33))):
         with cols[i % 16]:
@@ -145,50 +171,66 @@ with st.sidebar:
                 st.session_state.tooth_number = tooth
                 print(f"Tooth {tooth} selected")
     # Close the div wrapper
-    st.markdown('</div>', unsafe_allow_html=True)  
+    #st.markdown('</div>', unsafe_allow_html=True)  
     
     st.divider()
     
+    # Main action buttons
+    st.markdown("### Actions")
+    
      # Main buttons
-    column_1, column_2 = st.columns(2)
-    with column_1:
-        if st.button("Submit", type="primary"):
-            
-            # FIXME: Theese have to be unique
-            # This image should be either stored in a database with unique id or this image should be saved now in a dedicated folder
-            image_id = st.session_state.current_image_index
-            
-            # Add this image to the coco data
-            # FIXME: Not sure about the TARGET_IMAGE_SIZE
-            # It depends on how the aanotated images will be saved and whther they will be resized before or after
-            st.session_state.coco_data.add_image(
-                image_id, f"image_{image_id}.jpg", image_size=TARGET_IMAGE_SIZE)   
-        
-            for idx, row in st.session_state.annotation_df.iterrows():
-                st.session_state.coco_data.add_annotation(
-                    idx, 
-                    image_id, row["tooth_number"], 
-                    [row["x_min"], row["y_min"], 
-                     row["width"], row["height"]])
-                
-            if st.session_state.coco_data.save_annotations(SAVE_PATH):
-                # Create a placeholder for the success message
-                success_placeholder = st.empty()
-                success_placeholder.success("Annotations saved successfully.")
-                # Wait for n seconds
-                time.sleep(1)
-                # Clear the success message
-                success_placeholder.empty()
-            else:
-                st.error("Failed to save annotations.")
-        
-            # Show the next image
-            next_image()
 
-    with column_2:
-        if st.button("Skip", type="primary"):
-            # Show the next image
+    if st.button("Submit", type="primary", use_container_width=True):
+        
+        
+        # FIXME: Theese have to be unique
+        # This image should be either stored in a database with unique id or this image should be saved now in a dedicated folder
+        image_id = st.session_state.current_image_index
+        
+        # Add this image to the coco data
+        # FIXME: Not sure about the TARGET_IMAGE_SIZE
+        # It depends on how the aanotated images will be saved and whther they will be resized before or after
+        st.session_state.coco_data.add_image(
+            image_id, f"image_{image_id}.jpg", image_size=(TARGET_IMAGE_SIZE, TARGET_IMAGE_SIZE))   
+    
+        for idx, row in st.session_state.annotation_df.iterrows():
+            st.session_state.coco_data.add_annotation(
+                idx, 
+                image_id, row["tooth_number"], 
+                [row["x_min"], row["y_min"], 
+                    row["width"], row["height"]])
+            
+        if st.session_state.coco_data.save_annotations(SAVE_PATH):
+            # Create a placeholder for the success message
+            success_placeholder = st.empty()
+            success_placeholder.success("Annotations saved successfully.")
+            # Wait for n seconds
+            time.sleep(1)
+            # Clear the success message
+            success_placeholder.empty()
+        else:
+            st.error("Failed to save annotations.")
+    
+        # Show the next image
+        next_image()
+        
+    # Help button
+    if st.button("Toggle Help", use_container_width=True):
+        toggle_help()
+        
+    # Create two columns for the next and previous buttons
+    col1, col2 = st.columns(2)
+    with col1:
+        # Disable the Next button if we're at the last image
+        next_disabled = st.session_state.current_image_index >= len(st.session_state.images) - 1
+        if st.button("Next Image", use_container_width=True, disabled=next_disabled):
             next_image()
+    with col2:
+        # Disable the Previous button if we're at the first image
+        prev_disabled = st.session_state.current_image_index <= 0
+        if st.button("Previous Image", use_container_width=True, disabled=prev_disabled):
+            previous_image()
+
             
             
 def delete_annotation(idx):
@@ -231,6 +273,22 @@ def build_html_table(dataframe):
 # Display current image and progress
 current_image = get_current_image()
 if current_image is not None:
+    
+    # Display instructions if help is toggled on
+    if st.session_state.show_help:
+        with st.expander("How to use this tool", expanded=True):
+            st.markdown("""
+            ### Quick Instructions:
+            1. **Select a tooth number** from the sidebar
+            2. **Draw a bounding box** around the corresponding tooth in the image
+            3. Repeat for all teeth you want to annotate
+            4. Click **Save Annotations** when done with this image
+            
+            ### Tips:
+            - Use the zoom slider to get a better view for small teeth
+            - You can delete individual annotations from the table below
+            - All annotated teeth are shown in the table with previews
+            """)
     
     resized_image = current_image.resize((TARGET_IMAGE_SIZE, TARGET_IMAGE_SIZE), Image.LANCZOS)
 
@@ -316,12 +374,10 @@ else:
         # weak labelling for object detetion (?)
         
         
-"""
-Project Plan
+#Project Plan
 
-To talk about
+#To talk about
 
-"""
         
         
 

@@ -1,3 +1,10 @@
+/* Radio Buttons Text */
+.stRadio>label {{
+    font-size: 32px;
+    font-weight: bold;
+    color: {text};
+}}
+
 /* Main Buttons */
 .stButton>button {{
     background-color: {secondary};
@@ -8,7 +15,6 @@
     font-size: 10px;
     transition: all 0.1s ease;
     box-shadow: 0 1px 3px rgba({shadow[0]}, {shadow[1]}, {shadow[2]}, {shadow[3]});
-
 }}
 .stButton>button:hover {{
     background-color: {partial};
@@ -30,7 +36,8 @@
     justify-content: center;
     width: 100%;
     gap: 4px;
-    margin: 10px 0;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
 }}
 .element-container:has(#button-after) + div button {{
     background-color: transparent;
@@ -114,3 +121,4 @@ td img {{
     border-radius: 4px;
     height: 8px !important;
 }}
+
