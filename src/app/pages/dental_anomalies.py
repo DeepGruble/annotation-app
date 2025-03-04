@@ -1,5 +1,5 @@
 from annotation_template import *
-from annotations import ToothNumberAnnotations, AnnomalyAnnotations
+from annotations import AnnomalyAnnotations
 
 DANISH_LABELS = [
     "Tandkrone", "Protese", "Plastfylding", "Plastisk Opbygning", "Støbt opbygning"
