@@ -31,6 +31,13 @@ LABELS = {
     "International": INTERNATIONAL_LABELS 
 }
 
+css = """
+.element-container:has(#button-after) + div button {
+    height: 25px;
+    width: 25px;
+}
+"""
+
 coco_annotation = ToothNumberAnnotations()
 init_session_state(coco_annotation)
-annotation_page("Dental Numbering Annotation", LABELS)
+annotation_page("Dental Numbering Annotation", LABELS, custom_css=css)

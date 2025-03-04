@@ -34,8 +34,6 @@
     font-size: 10px;
     color: {text};
     border: 1px solid {secondary};
-    height: 25px;
-    width: 25px;
     border-radius: 5px;
     padding: 2px;
     cursor: pointer;
@@ -45,6 +43,7 @@
     justify-content: center;
     transition: all 0.1s ease;
 }}
+
 .element-container:has(#button-after) + div button:hover {{
     border: 2px solid {partial};
 }}
@@ -57,6 +56,13 @@
     background-color: {accent}; 
     border: 2px solid {accent};
 }}
+.selected-tooth {
+    background-color: {accent} !important; 
+    border: 2px solid {accent} !important;
+    color: {text} !important;
+    box-shadow: 0 0 0 2px rgba({accent_rgba[0]}, {accent_rgba[1]}, {accent_rgba[2]}, 0.5) !important;
+    transform: scale(1.1) !important;
+}
 
 /* Sidebar styling */
 [data-testid="stSidebar"][aria-expanded="true"] {{

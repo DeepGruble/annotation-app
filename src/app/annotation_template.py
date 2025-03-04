@@ -233,6 +233,8 @@ def create_sidebar(labels):
         for i, label in enumerate(labels):
             with cols[i % ncols]:
                 st.markdown('<span id="button-after"></span>', unsafe_allow_html=True)
+                
+                
                 if st.button(f"{label}", key=f"{i}"):
                     st.session_state.label_id = i
                     print(f"Label {label} selected")
@@ -358,11 +360,14 @@ def set_theme():
         st.warning("CSS template not found. Please check the path.")
         
 # Main annotation function
-def annotation_page(title, labels):
+def annotation_page(title, labels, custom_css=None):
     st.set_page_config(layout="wide", page_title=title)
     st.session_state.current_labels = labels["Danish"]
     
     set_theme()
+    
+    if custom_css:
+        st.markdown(f"<style>{custom_css}</style>", unsafe_allow_html=True)
     
     # ===============================================================
     # SIDEBAR
