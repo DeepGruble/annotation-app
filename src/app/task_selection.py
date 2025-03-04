@@ -2,9 +2,10 @@ import streamlit as st
 
 st.set_page_config(page_title="Annotation Tool", layout="centered")
 
+
 st.title("Annotation Tool")
 
-st.write("Select an annotation task:")
+st.write("### Select an annotation task:")
 
 col1, col2 = st.columns(2)
 
