@@ -233,8 +233,6 @@ def create_sidebar(labels):
         for i, label in enumerate(labels):
             with cols[i % ncols]:
                 st.markdown('<span id="button-after"></span>', unsafe_allow_html=True)
-                
-                
                 if st.button(f"{label}", key=f"{i}"):
                     st.session_state.label_id = i
                     print(f"Label {label} selected")
